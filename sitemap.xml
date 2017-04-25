@@ -2,12 +2,18 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://qizr.github.io/about/</loc>
+    <lastmod>2017-04-25T22:59:22+08:00</lastmod>
+  </url>
+  
+  <url>
     <loc>http://qizr.github.io/categories/</loc>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>http://qizr.github.io/</loc>
+    <lastmod>2017-04-25T22:59:22+08:00</lastmod>
     <priority>0</priority>
   </url>
   
