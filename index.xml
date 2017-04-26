@@ -2,21 +2,21 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>My New Hugo Site</title>
-    <link>http://qizr.github.io/</link>
+    <link>http://qizr.github.iohyde/</link>
     <description>Recent content on My New Hugo Site</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <lastBuildDate>Tue, 25 Apr 2017 22:59:22 +0800</lastBuildDate>
     
-	<atom:link href="http://qizr.github.io/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="http://qizr.github.iohyde/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>about</title>
-      <link>http://qizr.github.io/about/</link>
+      <link>http://qizr.github.iohyde/about/</link>
       <pubDate>Tue, 25 Apr 2017 22:59:22 +0800</pubDate>
       
-      <guid>http://qizr.github.io/about/</guid>
+      <guid>http://qizr.github.iohyde/about/</guid>
       <description> Hello THIS IS MY first blog! </description>
     </item>
     
