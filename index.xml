@@ -2,30 +2,34 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>这里是qizr的个人博客</title>
-    <link>http://blog.qizr.tech/</link>
+    <link>http://qizr.github.io/</link>
     <description>Recent content on 这里是qizr的个人博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <lastBuildDate>Fri, 28 Apr 2017 00:59:02 +0800</lastBuildDate>
     
-	<atom:link href="http://blog.qizr.tech/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="http://qizr.github.io/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>插件设计架构</title>
-      <link>http://blog.qizr.tech/post/%E6%8F%92%E4%BB%B6%E8%AE%BE%E8%AE%A1%E6%9E%B6%E6%9E%84/</link>
+      <link>http://qizr.github.io/post/%E6%8F%92%E4%BB%B6%E8%AE%BE%E8%AE%A1%E6%9E%B6%E6%9E%84/</link>
       <pubDate>Fri, 28 Apr 2017 00:59:02 +0800</pubDate>
       
-      <guid>http://blog.qizr.tech/post/%E6%8F%92%E4%BB%B6%E8%AE%BE%E8%AE%A1%E6%9E%B6%E6%9E%84/</guid>
+      <guid>http://qizr.github.io/post/%E6%8F%92%E4%BB%B6%E8%AE%BE%E8%AE%A1%E6%9E%B6%E6%9E%84/</guid>
       <description>#概述 插件架构是在老马的书中提出的一种架构</description>
     </item>
     
     <item>
-      <title>phone</title>
-      <link>http://blog.qizr.tech/post/phone/</link>
-      <pubDate>Fri, 28 Apr 2017 00:23:03 +0800</pubDate>
+      <title></title>
+      <link>http://qizr.github.io/post/software-architecture-patterns%E7%BF%BB%E8%AF%91/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>http://blog.qizr.tech/post/phone/</guid>
-      <description>#总体概述 手机是日常中最近常使用的一种通讯工具,但是但是</description>
+      <guid>http://qizr.github.io/post/software-architecture-patterns%E7%BF%BB%E8%AF%91/</guid>
+      <description>#Software Architecture Patterns翻译
+最近再看阮一峰的一篇博客提到了一本书《Software Architecture Patterns》（PDF） ,写的不错,虽然英语很屎,试着翻(gu)译(ge)一下。以下为翻译的内容，祝我能够翻译完，并借此机会能够加深对架构的认识。
+ps:建议看英文原著. ps:[ ]中的话是我说的. ps:好吧,我找到已经有一个翻译版本了(https://github.com/hehonghui/android-tech-frontier/tree/master/software-architecture-patterns) 早看到就不翻译了&amp;hellip;&amp;hellip;
+参考: 阮一峰的博客 鸟窝的博客
+目录  介绍 1.分层架构(Layered Architecture)  模式描述(Pattern Description) 关键概念(Pattern Description) 架构例子(Pattern Example) 注意事项(Considerations) 模式分析(Pattern Analysis)  2.事件驱动架构(Event-Driven Architecture)  Mediator拓扑(Mediator Topology) Broker拓扑架构[broker就是代理的意思] 注意事项(Considerations) 模式分析(Pattern Analysis)  3.微内核架构 (Microkernel Architecture)  模式描述(Pattern Description) 模式例子(Pattern Examples) 结论(Considerations) 模式分析(Pattern Analysis)  4.微服务架构(Microservices Architecture Pattern)  模式拓扑(Pattern Topologies) 避免依赖和编排(Avoid Dependencies and Orchestration) 注意事项(Considerations) 模式分析(Pattern Analysis)  5.云架构(Space-Based Architecture)  模式描述(Pattern Description) Pattern Dynamics 注意事项(Considerations) 模式分析(Pattern Analysis)  附录A  介绍 开发人员在没有合适架构的情况下开始编写程序是非常普遍的情况.</description>
     </item>
     
   </channel>
