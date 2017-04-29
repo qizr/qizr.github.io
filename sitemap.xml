@@ -2,32 +2,33 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>http://qizr.github.io/post/%E6%8F%92%E4%BB%B6%E8%AE%BE%E8%AE%A1%E6%9E%B6%E6%9E%84/</loc>
+    <loc>http://blog.qizr.tech/post/%E6%8F%92%E4%BB%B6%E8%AE%BE%E8%AE%A1%E6%9E%B6%E6%9E%84/</loc>
     <lastmod>2017-04-28T00:59:02+08:00</lastmod>
   </url>
   
   <url>
-    <loc>http://qizr.github.io/post/software-architecture-patterns%E7%BF%BB%E8%AF%91/</loc>
+    <loc>http://blog.qizr.tech/post/software-architecture-patterns%E7%BF%BB%E8%AF%91/</loc>
+    <lastmod>2017-04-01T18:38:16+08:00</lastmod>
   </url>
   
   <url>
-    <loc>http://qizr.github.io/categories/</loc>
+    <loc>http://blog.qizr.tech/categories/</loc>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>http://qizr.github.io/post/</loc>
+    <loc>http://blog.qizr.tech/post/</loc>
     <lastmod>2017-04-28T00:59:02+08:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>http://qizr.github.io/tags/</loc>
+    <loc>http://blog.qizr.tech/tags/</loc>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>http://qizr.github.io/</loc>
+    <loc>http://blog.qizr.tech/</loc>
     <lastmod>2017-04-28T00:59:02+08:00</lastmod>
     <priority>0</priority>
   </url>
