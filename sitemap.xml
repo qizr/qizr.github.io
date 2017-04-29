@@ -12,12 +12,6 @@
   </url>
   
   <url>
-    <loc>http://blog.qizr.tech/</loc>
-    <lastmod>2017-04-28T00:59:02+08:00</lastmod>
-    <priority>0</priority>
-  </url>
-  
-  <url>
     <loc>http://blog.qizr.tech/categories/</loc>
     <priority>0</priority>
   </url>
@@ -30,6 +24,12 @@
   
   <url>
     <loc>http://blog.qizr.tech/tags/</loc>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://blog.qizr.tech/</loc>
+    <lastmod>2017-04-28T00:59:02+08:00</lastmod>
     <priority>0</priority>
   </url>
   
