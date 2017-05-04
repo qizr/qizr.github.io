@@ -12,12 +12,12 @@
     
     
     <item>
-      <title>插件设计架构</title>
+      <title>深入理解插件设计架构</title>
       <link>http://blog.qizr.tech/post/%E6%8F%92%E4%BB%B6%E8%AE%BE%E8%AE%A1%E6%9E%B6%E6%9E%84/</link>
       <pubDate>Fri, 28 Apr 2017 00:59:02 +0800</pubDate>
       
       <guid>http://blog.qizr.tech/post/%E6%8F%92%E4%BB%B6%E8%AE%BE%E8%AE%A1%E6%9E%B6%E6%9E%84/</guid>
-      <description>概述 插件架构是在老马的书中提出的一种架</description>
+      <description>插件设计的思想很容易理解,但是越容易理解就越不容易写出来,不想随便粘贴写网上的过来,希望能写出点自己的东西出来,硬着头皮写吧,还请各位赐教.</description>
     </item>
     
     <item>

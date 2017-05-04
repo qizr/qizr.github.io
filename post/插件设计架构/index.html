@@ -7,7 +7,7 @@
 		<meta name="author" content="qizr">
 		<meta name="description" content="一名国企码农的呐喊">
 		<meta name="generator" content="Hugo 0.20.5" />
-		<title>插件设计架构 &middot; 这里是qizr的博客</title>
+		<title>深入理解插件设计架构 &middot; 这里是qizr的博客</title>
 		<link rel="shortcut icon" href="http://blog.qizr.tech/images/favicon.ico">
 		<link rel="stylesheet" href="http://blog.qizr.tech/css/style.css">
 		<link rel="stylesheet" href="http://blog.qizr.tech/css/highlight.css">
@@ -40,12 +40,12 @@
             <article class="post">
                 <header>
                     <h1>
-                        插件设计架构
+                        深入理解插件设计架构
                     </h1>
                     <h2 class="headline">
                     Apr 28, 2017 00:59
-                    · 19 words
-                    · 1 minute read
+                    · 1701 words
+                    · 4 minutes read
                       <span class="tags">
                       
                       </span>
@@ -55,9 +55,98 @@
                 <section id="post-body">
                     
 
-<h2 id="概述">概述</h2>
+<p>插件设计的思想很容易理解,但是越容易理解就越不容易写出来,不想随便粘贴写网上的过来,希望能写出点自己的东西出来,硬着头皮写吧,还请各位赐教.</p>
 
-<p>插件架构是在老马的书中提出的一种架</p>
+<p>基于插件的设计好处很多,把扩展功能从框架中剥离出来,降低了框架的复杂度,让框架更容易实现.扩展功能与框架以一种很松的方式耦合,两者在保持接口不变的情况下,可以独立变化和发布,将软件的复杂度限制在了单个的插件之中,比较适用与需求不定或是业务容易发生变化的软件设计.</p>
+
+<h2 id="架构描述">架构描述</h2>
+
+<p>个人感觉,<a href="http://www.oreilly.com/programming/free/software-architecture-patterns.csp">《Software Architecture Patterns》</a>对该架构的描述比较准确,如下图所示.
+<img src="http://op7dcez5u.bkt.clouddn.com/%E6%8F%92%E4%BB%B6%E6%9E%B6%E6%9E%84.png" alt="插件架构" />
+点击<a href="http://www.oreilly.com/programming/free/files/software-architecture-patterns.pdf">这里</a>可以下载这篇文章.
+该架构需要关注以下三部分,</p>
+
+<h3 id="核心系统">核心系统</h3>
+
+<p>核心系统包含两部分功能,1.最小功能集合,提供给各个插件模块使用,也就是插件如何使用核心系统的功能;2.插件模块的生命周期管理,也就是核心系统需要发现插件模块并使用它们.</p>
+
+<h3 id="插件模块">插件模块</h3>
+
+<p>插件模块用于增强或扩展核心系统以产生额外的业务功能,插件模块应该是高度内聚,尽量避免产插件之间的依赖.</p>
+
+<h3 id="契约">契约</h3>
+
+<p>这里的契约包含了核心模块和插件模块的通信协议,模块之间不建议发生任何依赖.常见通信方式包含插件会提供一些虚函数,供核心系统中的模块加载器进行初始化,销毁等工作,核心系统提供一些函数,供具体插件模块使用,复杂一点如&lt;<Software Architecture Patterns>&gt;所描述的可以通过soap等远程通信方式完成两者之间的通信.</p>
+
+<h2 id="案例">案例</h2>
+
+<p>提到插件架构总会想到eclipse,其实众多IDE,编辑器,都采取了插件架构,例如QTCreator,sumblime等,下面结合这些实际的例子,看下这些优秀的软件是如何将插件模式落地的.</p>
+
+<h3 id="qtcreator">qtcreator</h3>
+
+<p>qtcreator是一款适用于qt开发的跨平台IDE,这里重点关注这款ide的设计,拿这个作为例子是因为本人在工作期间用的比较多.</p>
+
+<p><strong>qtcreator(4.2)界面:长得多像一个IDE啊</strong>
+<img src="http://op7dcez5u.bkt.clouddn.com/qtcreator.png" alt="qtcreator" /></p>
+
+<h4 id="架构描述-1">架构描述</h4>
+
+<p>QtCreator是由插件加载器和一堆插件构成的.如图所示.
+<img src="http://op7dcez5u.bkt.clouddn.com/qtcreator%E6%9E%B6%E6%9E%84.png" alt="QtCreator架构" /></p>
+
+<p>其中PluginManage负责插件的加载,管理,销毁等工作.插件中有一个叫core的插件,是QtCreator最基础的插件,提供了向界面增加菜单等功能,具体可以参考<a href="https://doc-snapshots.qt.io/qtcreator-extending/first-plugin.html">如何编写qt插件</a>.</p>
+
+<h4 id="核心系统-1">核心系统</h4>
+
+<p>可以明显看出,QtCreator的核心系统是由PluginManager和Core插件构成.前者负责插件的管理工作,后者负责提供QtCreator的最小功能集合,在PluginManager面前Core是当做普通插件进行加载,在自定义插件面前Core就是一个基础功能库,使用该库可以扩展QtCreator的功能.</p>
+
+<p>QtCreator的所用功能,全是由插件实现,这种思路的优点是简化了顶层业务(main那里)逻辑,在那里只能看到PlunginManager和Plugin,不需要看到基础库,缺点是增加了加载插件的复杂度,因为基础库这个插件需要被其他插件依赖,所以在插件加载时就必须要考虑插件之间的依赖性,这个在后面可以看到qtcreator是如何解决这个问题的.</p>
+
+<p><strong>core插件:</strong>
+<img src="http://op7dcez5u.bkt.clouddn.com/core%E6%8F%92%E4%BB%B6.png" alt="core就是插件" /></p>
+
+<p><strong>自定义插件使用core向界面添加菜单:</strong>
+<img src="http://op7dcez5u.bkt.clouddn.com/%E4%BD%BF%E7%94%A8core.png" alt="自定义插件使用core向界面添加菜单" /></p>
+
+<p>这里可以做个验证,QtCreator有个&rdquo;关于插件&rdquo;的菜单项,可以尝试把所有插件都移除,可以发现其中core插件是灰的,不能进行移除.</p>
+
+<p><strong>关于插件:</strong>
+<img src="http://op7dcez5u.bkt.clouddn.com/%E5%85%B3%E4%BA%8E%E6%8F%92%E4%BB%B6.png" alt="关于插件" /></p>
+
+<p>重启creator后,可以看到,基本就剩一个界面了.</p>
+
+<p><strong>裸体的qtcreator:</strong>
+<img src="http://op7dcez5u.bkt.clouddn.com/%E5%8E%BB%E6%8E%89%E6%8F%92%E4%BB%B6%E7%9A%84creator.png" alt="没有插件的creator" /></p>
+
+<p>有读者可能会问,这不还是有个界面嘛,这剩下眼睛能看到界面就是core插件完成的了,可以看到core插件初始化的代码中定义了MainWindow,所以说core插件是creator必须要加载的插件.</p>
+
+<p><strong>core插件初始化:</strong>
+<img src="http://op7dcez5u.bkt.clouddn.com/core%E6%8F%92%E4%BB%B6%E5%88%9D%E5%A7%8B%E5%8C%96.png" alt="core插件初始化" /></p>
+
+<h4 id="插件模块-1">插件模块</h4>
+
+<p>插件都需要继承IPlugin的接口,关于IPlugin的描述参见<a href="https://doc-snapshots.qt.io/qtcreator-extending/extensionsystem-iplugin.html#details">官方文档</a>,只说下重点,插件是由描述文件和继承IPlugin的类库组成.</p>
+
+<p><strong>描述文件:</strong>
+<img src="http://op7dcez5u.bkt.clouddn.com/plugin%E6%8F%8F%E8%BF%B0%E6%96%87%E4%BB%B6.png" alt="描述文件" />
+描述文件描述了插件的基本信息,用于被插件管理器加载,最后一行描述了该插件所依赖的其他插件,PluginManage会根据插件之间的依赖关系决定加载顺序,详见<a href="https://doc-snapshots.qt.io/qtcreator-extending/plugin-meta-data.html">这里</a>.</p>
+
+<p>IPlugin是插件的基类接口,列举下主要接口,详见<a href="https://doc-snapshots.qt.io/qtcreator-extending/extensionsystem-iplugin.html#details">这里</a>.</p>
+
+<p><code>
+bool IPlugin::initialize(const QStringList &amp;arguments, QString *errorString)//初始化函数,在插件被加载时会调用</code></p>
+
+<p>``</p>
+
+<h3 id="eclipse">eclipse</h3>
+
+<h2 id="扩展">扩展</h2>
+
+<h3 id="进程内">进程内</h3>
+
+<h3 id="进程间">进程间</h3>
+
+<h2 id="总结">总结</h2>
 
                 </section>
             </article>
