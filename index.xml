@@ -29,5 +29,14 @@
       <description>最近再看阮一峰的一篇博客提到了一本书《Software Architecture Patterns》（PDF） ,写的不错,虽然英语很屎,试着翻(gu)译(ge)一下。</description>
     </item>
     
+    <item>
+      <title></title>
+      <link>http://blog.qizr.tech/about/index/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://blog.qizr.tech/about/index/</guid>
+      <description>qizr_1986@163.com</description>
+    </item>
+    
   </channel>
 </rss>
