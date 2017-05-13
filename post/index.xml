@@ -17,7 +17,7 @@
       <pubDate>Fri, 28 Apr 2017 00:59:02 +0800</pubDate>
       
       <guid>http://blog.qizr.tech/post/%E6%8F%92%E4%BB%B6%E8%AE%BE%E8%AE%A1%E6%9E%B6%E6%9E%84/</guid>
-      <description>插件设计的思想很容易理解,但是越容易理解就越不容易写出来,不想随便粘贴写网上的过来,希望能写出点自己的东西出来,硬着头皮写吧,还请各位赐教.</description>
+      <description>基于插件的设计好处很多,把扩展功能从框架中剥离出来,降低了框架的复杂度,让框架更容易实现.扩展功能与框架以一种很松的方式耦合,两者在保持接口</description>
     </item>
     
     <item>
