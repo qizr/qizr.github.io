@@ -1,0 +1,379 @@
+    <!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="author" content="qizr_1986@163.com">
+		<meta name="description" content="一名国企码农的呐喊">
+		<meta name="generator" content="Hugo 0.20.5" />
+		<title>深入理解QtCreator的插件设计架构 &middot; 这里是qizr的博客</title>
+		<link rel="shortcut icon" href="http://blog.qizr.tech/images/favicon.ico">
+		<link rel="stylesheet" href="http://blog.qizr.tech/css/style.css">
+		<link rel="stylesheet" href="http://blog.qizr.tech/css/highlight.css">
+		
+
+		
+		<link rel="stylesheet" href="http://blog.qizr.tech/css/font-awesome.min.css">
+		
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='http://blog.qizr.tech/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='http://blog.qizr.tech/post'>Archive</a>
+	<a href='http://blog.qizr.tech/tags'>Tags</a>
+	<a href='http://blog.qizr.tech/about'>About</a>
+	<a href='http://blog.qizr.tech/pattern'>软件架构</a>
+	
+
+	
+</nav>
+
+
+        <section id="wrapper">
+            <article class="post">
+                <header>
+                    <h1>
+                        深入理解QtCreator的插件设计架构
+                    </h1>
+                    <h2 class="headline">
+                    Apr 28, 2017 00:59
+                    · 3087 words
+                    · 7 minutes read
+                      <span class="tags">
+                      
+                      </span>
+                    </h2>
+                </header>
+                
+                <section id="post-body">
+                    
+
+<p>基于插件的设计好处很多,把扩展功能从框架中剥离出来,降低了框架的复杂度,让框架更容易实现.扩展功能与框架以一种很松的方式耦合,两者在保持接口不变的情况下,可以独立变化和发布,将软件的复杂度限制在了单个的插件之中,比较适用与需求不定或是业务容易发生变化的软件设计.</p>
+
+<h2 id="1-架构描述">1.架构描述</h2>
+
+<p>个人感觉,<a href="http://www.oreilly.com/programming/free/software-architecture-patterns.csp">《Software Architecture Patterns》</a>对该架构的描述比较准确,如下图所示.
+<img src="http://op7dcez5u.bkt.clouddn.com/%E6%8F%92%E4%BB%B6%E6%9E%B6%E6%9E%84.png" alt="插件架构" />
+点击<a href="http://www.oreilly.com/programming/free/files/software-architecture-patterns.pdf">这里</a>可以下载这篇文章.
+该架构需要关注以下三部分,</p>
+
+<h3 id="1-1核心系统">1.1核心系统</h3>
+
+<p>核心系统包含两部分功能,1.最小功能集合,提供给各个插件模块使用,也就是插件如何使用核心系统的功能进行功能扩展;2.插件模块的生命周期管理.</p>
+
+<h3 id="1-2插件模块">1.2插件模块</h3>
+
+<p>插件模块用于增强或扩展核心系统以产生额外的业务功能,插件模块应该是高度内聚,尽量避免产插件之间的依赖.</p>
+
+<h3 id="1-3契约">1.3契约</h3>
+
+<p>这里的契约包含了核心模块和插件模块的通信协议,模块之间不建议发生任何依赖.常见通信方式包含插件会提供一些虚函数,供核心系统中的模块加载器进行初始化,销毁等工作,核心系统提供一些函数,供具体插件模块使用,还可以通过soap等远程通信方式完成两者之间的通信.</p>
+
+<h2 id="2-qtcreator案例">2.qtcreator案例</h2>
+
+<p>提到插件架构总会想到eclipse,其实众多IDE,编辑器,都采取了插件架构,例如QTCreator,sumblime等,下面结合这些实际的例子,看下这些优秀的软件是如何将插件模式落地的.</p>
+
+<p>qtcreator是一款适用于qt开发的跨平台IDE,这里重点关注这款ide的设计,拿这个作为例子是因为本人在工作期间用的比较多.</p>
+
+<p><strong>qtcreator(4.2)界面:长得多像一个IDE啊</strong>
+<img src="http://op7dcez5u.bkt.clouddn.com/qtcreator.png" alt="qtcreator" /></p>
+
+<h4 id="架构描述">架构描述</h4>
+
+<p>QtCreator是由插件加载器和一堆插件构成的.如图所示.
+<img src="http://op7dcez5u.bkt.clouddn.com/qtcreator%E6%9E%B6%E6%9E%84.png" alt="QtCreator架构" /></p>
+
+<p>其中PluginManage负责插件的加载,管理,销毁等工作.插件中有一个叫core的插件,是QtCreator最基础的插件,提供了向界面增加菜单等功能,具体可以参考<a href="https://doc-snapshots.qt.io/qtcreator-extending/first-plugin.html">如何编写qt插件</a>.</p>
+
+<h3 id="2-1核心系统">2.1核心系统</h3>
+
+<p>可以看出,QtCreator的核心系统是由PluginManager和Core插件构成.前者负责插件的管理工作,后者负责提供QtCreator的最小功能集合,在PluginManager面前Core是当做普通插件进行加载,在自定义插件面前Core就是一个基础功能库,使用该库可以扩展QtCreator的功能.</p>
+
+<p>QtCreator的所有功能,全是由插件实现,这种思路的优点是简化了顶层业务,也就是插件管理工作的逻辑,在那里只有PlunginManager和Plugin,缺点是增加了加载插件的复杂度,因为基础库这个插件需要被其他插件依赖,所以creator在插件加载时就必须要考虑插件之间的依赖性,这个在后面可以看到qtcreator是如何解决这个问题的.</p>
+
+<p><strong>core插件:</strong>
+<img src="http://op7dcez5u.bkt.clouddn.com/core%E6%8F%92%E4%BB%B6.png" alt="core就是插件" /></p>
+
+<p><strong>自定义插件使用core向界面添加菜单:</strong>
+<img src="http://op7dcez5u.bkt.clouddn.com/%E4%BD%BF%E7%94%A8core.png" alt="自定义插件使用core向界面添加菜单" /></p>
+
+<p>这里可以做个验证,QtCreator有个&rdquo;关于插件&rdquo;的菜单项,可以尝试把所有插件都移除,可以发现其中core插件是灰的,不能进行移除.</p>
+
+<p><strong>关于插件:</strong>
+<img src="http://op7dcez5u.bkt.clouddn.com/%E5%85%B3%E4%BA%8E%E6%8F%92%E4%BB%B6.png" alt="关于插件" /></p>
+
+<p>重启creator后,可以看到,基本就剩一个界面了.</p>
+
+<p><strong>裸体的qtcreator:</strong>
+<img src="http://op7dcez5u.bkt.clouddn.com/%E5%8E%BB%E6%8E%89%E6%8F%92%E4%BB%B6%E7%9A%84creator.png" alt="没有插件的creator" /></p>
+
+<p>有读者可能会问,这不还是有个界面嘛,这剩下眼睛能看到界面就是core插件完成的了,可以看到core插件初始化的代码中定义了MainWindow,所以说core插件是creator不能没有的.</p>
+
+<p><strong>core插件初始化:</strong>
+<img src="http://op7dcez5u.bkt.clouddn.com/core%E6%8F%92%E4%BB%B6%E5%88%9D%E5%A7%8B%E5%8C%96.png" alt="core插件初始化" /></p>
+
+<h3 id="2-2插件模块">2.2插件模块</h3>
+
+<p>插件都需要继承IPlugin的接口,关于IPlugin的描述参见<a href="https://doc-snapshots.qt.io/qtcreator-extending/extensionsystem-iplugin.html#details">官方文档</a>,只说下重点,插件是由描述文件和继承IPlugin的类库组成.</p>
+
+<p><strong>描述文件:</strong>
+<img src="http://op7dcez5u.bkt.clouddn.com/plugin%E6%8F%8F%E8%BF%B0%E6%96%87%E4%BB%B6.png" alt="描述文件" />
+描述文件描述了插件的基本信息,用于被插件管理器加载,最后一行描述了该插件所依赖的其他插件,PluginManage会根据插件之间的依赖关系决定加载顺序,详见<a href="https://doc-snapshots.qt.io/qtcreator-extending/plugin-meta-data.html">这里</a>.</p>
+
+<p>IPlugin是插件的基类接口,列举下主要接口,详见<a href="https://doc-snapshots.qt.io/qtcreator-extending/extensionsystem-iplugin.html#details">这里</a>.</p>
+
+<pre><code>//初始化函数,在插件被加载时会调用
+bool IPlugin::initialize(const QStringList &amp;arguments, QString *errorString)
+
+//在所有插件的initialize函数被调用后,调用该函数,此时该插件依赖的插件已经初始化完成
+void IPlugin::extensionsInitialized()
+
+//在所有插件的extensionsInitialized函数调用完成以后进行调用
+bool IPlugin::delayedInitialize()
+</code></pre>
+
+<p>关于以上两个函数的调用顺序可以参见官网的说法:</p>
+
+<blockquote>
+<p>1.All plugin libraries are loaded in root-to-leaf order of the dependency
+tree.</p>
+
+<p>2.All plugins&rsquo; initialize functions are called in root-to-leaf order of the
+dependency tree. This is a good place to put objects in the plugin manager&rsquo;s object pool.</p>
+
+<p>3.All plugins&rsquo; extensionsInitialized functions are called in leaf-to-root order of the dependency tree. At this point, plugins can be sure that all plugins that depend on this plugin have been initialized completely (implying that they have put objects in the object pool, if they want that during the initialization sequence).</p>
+</blockquote>
+
+<h3 id="2-3契约">2.3契约</h3>
+
+<p>契约包含两部分,1.核心系统如何加载插件,2.插件如何使用核心系统为软件扩展功能</p>
+
+<h4 id="核心系统如何加载插件">核心系统如何加载插件</h4>
+
+<p>结合上文中的分析,我们结合源码来看下,QtCreator的插件加载机制,从main函数开始看,能够找到下面这个函数.</p>
+
+<pre><code>PluginManager::loadPlugins();
+</code></pre>
+
+<p>让我们跟下去,看看loadPlugins()里面的源码,通过源码和注释基本能够看清qtcreator加载插件的机制.</p>
+
+<pre><code>void PluginManagerPrivate::loadPlugins()
+{
+    //1.获取待加载的插件,loadQueue函数将插件根据彼此的依赖关系进行了排序,
+    //有兴趣的同学可以关注下这个函数
+    QList&lt;PluginSpec *&gt; queue = loadQueue();
+    //2.加载插件
+    foreach (PluginSpec *spec, queue) {
+        loadPlugin(spec, PluginSpec::Loaded);
+    }
+    //3.初始化插件,调用每个插件的initialize函数
+    foreach (PluginSpec *spec, queue) {
+        loadPlugin(spec, PluginSpec::Initialized);
+    }
+    //4.按照相反顺序调用每个插件的extensionsInitialized函数
+    Utils::reverseForeach(queue, [this](PluginSpec *spec) {
+        loadPlugin(spec, PluginSpec::Running);
+        if (spec-&gt;state() == PluginSpec::Running) {
+            delayedInitializeQueue.append(spec);
+        } else {
+            // Plugin initialization failed, so cleanup after it
+            spec-&gt;d-&gt;kill();
+        }
+    });
+    emit q-&gt;pluginsChanged();
+
+    delayedInitializeTimer = new QTimer;
+    delayedInitializeTimer-&gt;setInterval(DELAYED_INITIALIZE_INTERVAL);
+    delayedInitializeTimer-&gt;setSingleShot(true);
+    connect(delayedInitializeTimer, &amp;QTimer::timeout,
+            this, &amp;PluginManagerPrivate::nextDelayedInitialize);
+    //5.延时调用每个插件的delayedInitialize函数
+    delayedInitializeTimer-&gt;start();
+}
+
+
+</code></pre>
+
+<p>关于解决插件依赖问题可以查看上文源码中loadQueue函数,具体的插件加载机制可以查看源码中loadPlugin函数,QtCreator的源码还是比较容易理解的.</p>
+
+<h4 id="插件如何使用核心系统">插件如何使用核心系统</h4>
+
+<p>通过官网的<a href="https://doc-snapshots.qt.io/qtcreator-extending/first-plugin.html">教程</a>,我们可以创建一个自己的creator插件,并能够了解自己的插件如何使用核心系统提供的功能,但是总感觉不过瘾,所以让我们来分析一个creator自带的插件,这里我选取git插件.</p>
+
+<p><strong>git插件:</strong>
+<img src="http://op7dcez5u.bkt.clouddn.com/git%E6%8F%92%E4%BB%B6.png" alt="git插件" /></p>
+
+<p>该插件覆盖了git基本操作,我以基本的log命令操作入手,来分析与核心系统的交互,完成Log操作以后,界面显示如下,主编辑区显示了log信息.
+<img src="http://op7dcez5u.bkt.clouddn.com/log.png" alt="log界面" /></p>
+
+<p>,首先找到git插件代码,git插件对应下面这个类</p>
+
+<pre><code>class GitPlugin : public VcsBase::VcsBasePlugin
+{
+    Q_OBJECT
+    Q_PLUGIN_METADATA(IID &quot;org.qt-project.Qt.QtCreatorPlugin&quot; FILE &quot;Git.json&quot;)
+
+public:
+...
+
+</code></pre>
+
+<p>找到log对应的函数对应的槽函数logRepository,调用了m_gitClient的log函数,继续跟踪进去.</p>
+
+<pre><code>void GitPlugin::logRepository()
+{
+    const VcsBasePluginState state = currentState();
+    QTC_ASSERT(state.hasTopLevel(), return);
+    m_gitClient-&gt;log(state.topLevel());
+}
+</code></pre>
+
+<p>里面代码较多,只关注重点的几行</p>
+
+<pre><code>void GitClient::log(const QString &amp;workingDirectory, const QString &amp;fileName,
+                    bool enableAnnotationContextMenu, const QStringList &amp;args)
+{
+   ...
+   //1.从核心系统获取Creator的主编辑区
+    VcsBaseEditorWidget *editor = createVcsEditor(editorId, title, sourceFile,
+                                                  codecFor(CodecLogOutput), &quot;logTitle&quot;, msgArg);
+   ...
+  // 2.开始拼接git的Log命令参数
+    QStringList arguments = { &quot;log&quot;, noColorOption, decorateOption };
+    int logCount = settings().intValue(GitSettings::logCountKey);
+    if (logCount &gt; 0)
+        arguments &lt;&lt; &quot;-n&quot; &lt;&lt; QString::number(logCount);
+
+    auto *argWidget = editor-&gt;configurationWidget();
+    argWidget-&gt;setBaseArguments(args);
+    QStringList userArgs = argWidget-&gt;arguments();
+
+    arguments.append(userArgs);
+
+    if (!fileName.isEmpty())
+        arguments &lt;&lt; &quot;--follow&quot; &lt;&lt; &quot;--&quot; &lt;&lt; fileName;
+    //3.执行git命令,并将命令结果显示在主编辑区
+    vcsExec(workingDir, arguments, editor);
+}
+
+VcsCommand *VcsBaseClientImpl::vcsExec(const QString &amp;workingDirectory, const QStringList &amp;arguments,
+                                       VcsBaseEditorWidget *editor, bool useOutputToWindow,
+                                       unsigned additionalFlags, const QVariant &amp;cookie) const
+{
+    //4.创建命令
+    VcsCommand *command = createCommand(workingDirectory, editor,
+                                        useOutputToWindow ? VcsWindowOutputBind : NoOutputBind);
+    command-&gt;setCookie(cookie);
+    command-&gt;addFlags(additionalFlags);
+    if (editor)
+    //5.得到编辑区指针
+        command-&gt;setCodec(editor-&gt;codec());
+    //6.进入命令队列执行,并将结果显示在编辑区内
+    //典型的命令模式!
+    enqueueJob(command, arguments);
+    return command;
+}
+</code></pre>
+
+<p>以上可以看出,log命令使用了核心系统的交互是在获取主编辑区那里,剩余就是插件内部的处理逻辑了.</p>
+
+<h2 id="3-扩展">3.扩展</h2>
+
+<p>以上了解了creator的设计思路,扩展一下,在消息中间件,微服务盛行的今天,核心系统和插件完全可以设计成不在一个进程当中,我们可以把核心系统和插件之间通过远程调用的方式进行联系,核心系统与插件均可设计为单个进程或者服务,让整个系统的部署更加灵活,单个插件的问题也不会影响到整个系统.当然,核心系统与插件之间的发现使用机制,是需要我们结合实际使用场景进一步深入思考的.</p>
+
+<h2 id="4-总结">4.总结</h2>
+
+<p>本文首先介绍了插件设计架构的理论基础,然后又结合了QtCreator的源码对跟架构如何落地进行了分析,希望能够帮助到想要了解插件架构的同学们.</p>
+
+<h2 id="参考">参考</h2>
+
+<p><a href="https://www.devbean.net/2012/03/qtcreator-plugin-develop-catalog/">qtcreator插件开发</a>
+<a href="https://doc-snapshots.qt.io/qtcreator-extending/extending-index.html#all-topics">Qt Creator Manual</a></p>
+
+                </section>
+            </article>
+
+            
+
+            
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+
+	
+	
+    <a class="symbol" href="your_facebook_link">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="your_github_link">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="your_twitter_link">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2017 <i class="fa fa-heart" aria-hidden="true"></i> qizr_1986@163.com
+    
+    </p>
+    <p class="small">
+        Powered by <a href="http://www.gohugo.io/">Hugo</a> Theme By <a href="https://github.com/nodejh/hugo-theme-cactus-plus">nodejh</a>
+    </p>
+</footer>
+
+        </section>
+
+        <script src="http://blog.qizr.tech/js/jquery-2.2.4.min.js"></script>
+<script src="http://blog.qizr.tech/js/main.js"></script>
+<script src="http://blog.qizr.tech/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'your_google_analytics_code', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+
+<script>
+var baiduAnalytics = 'your_baidu_tongji_code';
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?" + baiduAnalytics;
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+
+    </body>
+</html>
