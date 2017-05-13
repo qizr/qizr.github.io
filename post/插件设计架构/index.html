@@ -7,7 +7,7 @@
 		<meta name="author" content="qizr">
 		<meta name="description" content="一名国企码农的呐喊">
 		<meta name="generator" content="Hugo 0.20.5" />
-		<title>深入理解插件设计架构 &middot; 这里是qizr的博客</title>
+		<title>深入理解QtCreator的插件设计架构 &middot; 这里是qizr的博客</title>
 		<link rel="shortcut icon" href="http://blog.qizr.tech/images/favicon.ico">
 		<link rel="stylesheet" href="http://blog.qizr.tech/css/style.css">
 		<link rel="stylesheet" href="http://blog.qizr.tech/css/highlight.css">
@@ -40,12 +40,12 @@
             <article class="post">
                 <header>
                     <h1>
-                        深入理解插件设计架构
+                        深入理解QtCreator的插件设计架构
                     </h1>
                     <h2 class="headline">
                     Apr 28, 2017 00:59
-                    · 1701 words
-                    · 4 minutes read
+                    · 3221 words
+                    · 7 minutes read
                       <span class="tags">
                       
                       </span>
@@ -78,11 +78,9 @@
 
 <p>这里的契约包含了核心模块和插件模块的通信协议,模块之间不建议发生任何依赖.常见通信方式包含插件会提供一些虚函数,供核心系统中的模块加载器进行初始化,销毁等工作,核心系统提供一些函数,供具体插件模块使用,复杂一点如&lt;<Software Architecture Patterns>&gt;所描述的可以通过soap等远程通信方式完成两者之间的通信.</p>
 
-<h2 id="案例">案例</h2>
+<h2 id="qtcreator案例">qtcreator案例</h2>
 
 <p>提到插件架构总会想到eclipse,其实众多IDE,编辑器,都采取了插件架构,例如QTCreator,sumblime等,下面结合这些实际的例子,看下这些优秀的软件是如何将插件模式落地的.</p>
-
-<h3 id="qtcreator">qtcreator</h3>
 
 <p>qtcreator是一款适用于qt开发的跨平台IDE,这里重点关注这款ide的设计,拿这个作为例子是因为本人在工作期间用的比较多.</p>
 
@@ -96,7 +94,7 @@
 
 <p>其中PluginManage负责插件的加载,管理,销毁等工作.插件中有一个叫core的插件,是QtCreator最基础的插件,提供了向界面增加菜单等功能,具体可以参考<a href="https://doc-snapshots.qt.io/qtcreator-extending/first-plugin.html">如何编写qt插件</a>.</p>
 
-<h4 id="核心系统-1">核心系统</h4>
+<h3 id="核心系统-1">核心系统</h3>
 
 <p>可以明显看出,QtCreator的核心系统是由PluginManager和Core插件构成.前者负责插件的管理工作,后者负责提供QtCreator的最小功能集合,在PluginManager面前Core是当做普通插件进行加载,在自定义插件面前Core就是一个基础功能库,使用该库可以扩展QtCreator的功能.</p>
 
@@ -123,7 +121,7 @@
 <p><strong>core插件初始化:</strong>
 <img src="http://op7dcez5u.bkt.clouddn.com/core%E6%8F%92%E4%BB%B6%E5%88%9D%E5%A7%8B%E5%8C%96.png" alt="core插件初始化" /></p>
 
-<h4 id="插件模块-1">插件模块</h4>
+<h3 id="插件模块-1">插件模块</h3>
 
 <p>插件都需要继承IPlugin的接口,关于IPlugin的描述参见<a href="https://doc-snapshots.qt.io/qtcreator-extending/extensionsystem-iplugin.html#details">官方文档</a>,只说下重点,插件是由描述文件和继承IPlugin的类库组成.</p>
 
@@ -133,20 +131,168 @@
 
 <p>IPlugin是插件的基类接口,列举下主要接口,详见<a href="https://doc-snapshots.qt.io/qtcreator-extending/extensionsystem-iplugin.html#details">这里</a>.</p>
 
-<p><code>
-bool IPlugin::initialize(const QStringList &amp;arguments, QString *errorString)//初始化函数,在插件被加载时会调用</code></p>
+<pre><code>//初始化函数,在插件被加载时会调用
+bool IPlugin::initialize(const QStringList &amp;arguments, QString *errorString)
 
-<p>``</p>
+//在所有插件的initialize函数被调用后,调用该函数,此时该插件依赖的插件已经初始化完成
+void IPlugin::extensionsInitialized()
 
-<h3 id="eclipse">eclipse</h3>
+//在所有插件的extensionsInitialized函数调用完成以后进行调用
+bool IPlugin::delayedInitialize()
+</code></pre>
+
+<p>关于以上两个函数的调用顺序可以参见官网的说法:</p>
+
+<blockquote>
+<p>1.All plugin libraries are loaded in root-to-leaf order of the dependency
+tree.</p>
+
+<p>2.All plugins&rsquo; initialize functions are called in root-to-leaf order of the
+dependency tree. This is a good place to put objects in the plugin manager&rsquo;s object pool.</p>
+
+<p>3.All plugins&rsquo; extensionsInitialized functions are called in leaf-to-root order of the dependency tree. At this point, plugins can be sure that all plugins that depend on this plugin have been initialized completely (implying that they have put objects in the object pool, if they want that during the initialization sequence).</p>
+</blockquote>
+
+<h3 id="契约-1">契约</h3>
+
+<p>契约包含两部分,1.核心系统如何加载插件,2.插件如何使用核心系统为软件扩展功能</p>
+
+<h4 id="核心系统如何加载插件">核心系统如何加载插件</h4>
+
+<p>结合上文中的分析,我们结合源码来看下,QtCreator的插件加载机制,从main函数开始看,能够找到下面这个函数.</p>
+
+<pre><code>PluginManager::loadPlugins();
+</code></pre>
+
+<p>让我们跟下去,看看loadPlugins()里面的源码,通过源码和注释基本能够看清qtcreator加载插件的机制.</p>
+
+<pre><code>void PluginManagerPrivate::loadPlugins()
+{
+    //1.获取待加载的插件,loadQueue函数将插件根据依赖关系进行了排序,
+    //有兴趣的同学可以关注下这个函数,我在下文会在说这个函数
+    QList&lt;PluginSpec *&gt; queue = loadQueue();
+    //2.加载插件
+    foreach (PluginSpec *spec, queue) {
+        loadPlugin(spec, PluginSpec::Loaded);
+    }
+    //3.初始化插件,调用每个插件的initialize函数
+    foreach (PluginSpec *spec, queue) {
+        loadPlugin(spec, PluginSpec::Initialized);
+    }
+    //4.按照相反顺序调用每个插件的extensionsInitialized函数
+    Utils::reverseForeach(queue, [this](PluginSpec *spec) {
+        loadPlugin(spec, PluginSpec::Running);
+        if (spec-&gt;state() == PluginSpec::Running) {
+            delayedInitializeQueue.append(spec);
+        } else {
+            // Plugin initialization failed, so cleanup after it
+            spec-&gt;d-&gt;kill();
+        }
+    });
+    emit q-&gt;pluginsChanged();
+
+    delayedInitializeTimer = new QTimer;
+    delayedInitializeTimer-&gt;setInterval(DELAYED_INITIALIZE_INTERVAL);
+    delayedInitializeTimer-&gt;setSingleShot(true);
+    connect(delayedInitializeTimer, &amp;QTimer::timeout,
+            this, &amp;PluginManagerPrivate::nextDelayedInitialize);
+    //5.延时调用每个插件的delayedInitialize函数
+    delayedInitializeTimer-&gt;start();
+}
+
+
+</code></pre>
+
+<p>关于解决插件依赖问题可以查看上文源码中loadQueue函数,具体的插件加载机制可以查看源码中loadPlugin函数,QtCreator的源码还是比较容易理解的.</p>
+
+<h4 id="插件如何使用核心系统">插件如何使用核心系统</h4>
+
+<p>通过官网的<a href="https://doc-snapshots.qt.io/qtcreator-extending/first-plugin.html">教程</a>,我们可以创建一个自己的creator插件,并能够了解自己的插件如何使用核心系统提供的功能,但是总感觉不过瘾,所以让我们来分析一个creator自带的插件,这里我选取git插件,因为大多数人应该会使用git.</p>
+
+<p><strong>git插件:</strong>
+<img src="http://op7dcez5u.bkt.clouddn.com/git%E6%8F%92%E4%BB%B6.png" alt="git插件" /></p>
+
+<p>该插件覆盖了git基本操作,我以基本的git插件的log命令操作入手,来分析与核心系统的交互,完成Log操作以后,界面显示如下,主编辑区显示了log信息.
+<img src="http://op7dcez5u.bkt.clouddn.com/log.png" alt="log界面" /></p>
+
+<p>,首先找到git插件代码,git插件对应下面这个</p>
+
+<pre><code>class GitPlugin : public VcsBase::VcsBasePlugin
+{
+    Q_OBJECT
+    Q_PLUGIN_METADATA(IID &quot;org.qt-project.Qt.QtCreatorPlugin&quot; FILE &quot;Git.json&quot;)
+
+public:
+...
+
+</code></pre>
+
+<p>找到Log对应的函数对应的函数,调用了m_gitClient的log函数,继续跟进去.</p>
+
+<pre><code>void GitPlugin::logRepository()
+{
+    const VcsBasePluginState state = currentState();
+    QTC_ASSERT(state.hasTopLevel(), return);
+    m_gitClient-&gt;log(state.topLevel());
+}
+</code></pre>
+
+<p>里面代码较多,只关注重点的几行</p>
+
+<pre><code>void GitClient::log(const QString &amp;workingDirectory, const QString &amp;fileName,
+                    bool enableAnnotationContextMenu, const QStringList &amp;args)
+{
+   ...
+   //1.从核心系统获取Creator的主编辑区
+    VcsBaseEditorWidget *editor = createVcsEditor(editorId, title, sourceFile,
+                                                  codecFor(CodecLogOutput), &quot;logTitle&quot;, msgArg);
+   ...
+  // 2.开始拼接git的Log命令参数
+    QStringList arguments = { &quot;log&quot;, noColorOption, decorateOption };
+    int logCount = settings().intValue(GitSettings::logCountKey);
+    if (logCount &gt; 0)
+        arguments &lt;&lt; &quot;-n&quot; &lt;&lt; QString::number(logCount);
+
+    auto *argWidget = editor-&gt;configurationWidget();
+    argWidget-&gt;setBaseArguments(args);
+    QStringList userArgs = argWidget-&gt;arguments();
+
+    arguments.append(userArgs);
+
+    if (!fileName.isEmpty())
+        arguments &lt;&lt; &quot;--follow&quot; &lt;&lt; &quot;--&quot; &lt;&lt; fileName;
+    //3.执行git命令,并将命令结果显示在主编辑区
+    vcsExec(workingDir, arguments, editor);
+}
+
+VcsCommand *VcsBaseClientImpl::vcsExec(const QString &amp;workingDirectory, const QStringList &amp;arguments,
+                                       VcsBaseEditorWidget *editor, bool useOutputToWindow,
+                                       unsigned additionalFlags, const QVariant &amp;cookie) const
+{
+    //4.创建命令
+    VcsCommand *command = createCommand(workingDirectory, editor,
+                                        useOutputToWindow ? VcsWindowOutputBind : NoOutputBind);
+    command-&gt;setCookie(cookie);
+    command-&gt;addFlags(additionalFlags);
+    if (editor)
+    //5.得到编辑区指针
+        command-&gt;setCodec(editor-&gt;codec());
+    //6.进入命令队列执行,并将结果显示在编辑区内
+    //典型的命令模式!
+    enqueueJob(command, arguments);
+    return command;
+}
+</code></pre>
+
+<p>以上可以看出,log命令使用了核心系统的交互是在获取主编辑区那里,剩余就是插件内部的处理逻辑了.</p>
 
 <h2 id="扩展">扩展</h2>
 
-<h3 id="进程内">进程内</h3>
-
-<h3 id="进程间">进程间</h3>
+<p>以上了解了creator的设计思路,扩展一下思路,在消息中间件,微服务盛行的今天,核心系统和插件可以设计成不在一个进程当中,我们可以把核心系统和插件之间通过远程调用的方式进行联系,核心系统与插件均可设计为单个进程或者服务,让整个系统的部署更加灵活,单个插件的问题也不会影响到整个系统.当然,核心系统与插件之间的发现使用机制,是需要我们结合实际使用场景进一步深入思考的.</p>
 
 <h2 id="总结">总结</h2>
+
+<p>本文首先介绍了插件设计架构的理论基础,然后又结合了QtCreator的源码对跟架构如何落地进行了分析,希望能够帮助读者正确使用该架构.</p>
 
                 </section>
             </article>
