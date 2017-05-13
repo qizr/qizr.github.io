@@ -96,7 +96,7 @@
 
 <p>可以看出,QtCreator的核心系统是由PluginManager和Core插件构成.前者负责插件的管理工作,后者负责提供QtCreator的最小功能集合,在PluginManager面前Core是当做普通插件进行加载,在自定义插件面前Core就是一个基础功能库,使用该库可以扩展QtCreator的功能.</p>
 
-<p>QtCreator的所用功能,全是由插件实现,这种思路的优点是简化了顶层业务,也就是插件管理工作的逻辑,在那里只有PlunginManager和Plugin,缺点是增加了加载插件的复杂度,因为基础库这个插件需要被其他插件依赖,所以creator在插件加载时就必须要考虑插件之间的依赖性,这个在后面可以看到qtcreator是如何解决这个问题的.</p>
+<p>QtCreator的所有功能,全是由插件实现,这种思路的优点是简化了顶层业务,也就是插件管理工作的逻辑,在那里只有PlunginManager和Plugin,缺点是增加了加载插件的复杂度,因为基础库这个插件需要被其他插件依赖,所以creator在插件加载时就必须要考虑插件之间的依赖性,这个在后面可以看到qtcreator是如何解决这个问题的.</p>
 
 <p><strong>core插件:</strong>
 <img src="http://op7dcez5u.bkt.clouddn.com/core%E6%8F%92%E4%BB%B6.png" alt="core就是插件" /></p>
