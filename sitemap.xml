@@ -22,6 +22,11 @@
   </url>
   
   <url>
+    <loc>http://blog.qizr.tech/post/</loc>
+    <lastmod>2015-06-20T14:02:37+02:00</lastmod>
+  </url>
+  
+  <url>
     <loc>http://blog.qizr.tech/categories/</loc>
     <priority>0</priority>
   </url>
