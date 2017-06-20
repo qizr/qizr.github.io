@@ -11,5 +11,14 @@
 	<atom:link href="http://blog.qizr.tech/tags/index.xml" rel="self" type="application/rss+xml" />
     
     
+    <item>
+      <title>Ddd</title>
+      <link>http://blog.qizr.tech/tags/ddd/</link>
+      <pubDate>Sat, 17 Jun 2017 21:19:42 +0800</pubDate>
+      
+      <guid>http://blog.qizr.tech/tags/ddd/</guid>
+      <description></description>
+    </item>
+    
   </channel>
 </rss>

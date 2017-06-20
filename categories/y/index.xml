@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Y on 这里是qizr的博客</title>
+    <link>http://blog.qizr.tech/categories/y/</link>
+    <description>Recent content in Y on 这里是qizr的博客</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Sat, 17 Jun 2017 21:19:42 +0800</lastBuildDate>
+    
+	<atom:link href="http://blog.qizr.tech/categories/y/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>DDD初探</title>
+      <link>http://blog.qizr.tech/pattern/ddd%E5%88%9D%E6%8E%A2/</link>
+      <pubDate>Sat, 17 Jun 2017 21:19:42 +0800</pubDate>
+      
+      <guid>http://blog.qizr.tech/pattern/ddd%E5%88%9D%E6%8E%A2/</guid>
+      <description>1.DDD(DOMAN-DRIVEN DESIGN)是什么? DDD首先不是关于技术的,而是关于关于讨论,聆听,理解,发现和业务价值的&amp;hellip; 狭义的理解,DDD就是业务驱</description>
+    </item>
+    
+  </channel>
+</rss>
