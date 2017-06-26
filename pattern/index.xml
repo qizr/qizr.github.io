@@ -12,12 +12,12 @@
     
     
     <item>
-      <title>DDD初探</title>
+      <title>DDD初探-通用语言</title>
       <link>http://blog.qizr.tech/pattern/ddd%E5%88%9D%E6%8E%A2/</link>
       <pubDate>Sat, 17 Jun 2017 21:19:42 +0800</pubDate>
       
       <guid>http://blog.qizr.tech/pattern/ddd%E5%88%9D%E6%8E%A2/</guid>
-      <description>1.DDD(DOMAN-DRIVEN DESIGN)是什么? DDD首先不是关于技术的,而是关于关于讨论,聆听,理解,发现和业务价值的&amp;hellip; 狭义的理解,DDD就是业务驱</description>
+      <description>1.DDD(DOMAN-DRIVEN DESIGN)是什么? DDD的核心是消化特定业务领域的知识并创建忠实反应它的软件模型.业务领域是一个公司开展自身业务的方式:组织,流程,实</description>
     </item>
     
     <item>

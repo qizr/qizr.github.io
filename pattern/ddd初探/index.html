@@ -7,7 +7,7 @@
 		<meta name="author" content="qizr_1986@163.com">
 		<meta name="description" content="一名国企码农的呐喊">
 		<meta name="generator" content="Hugo 0.20.5" />
-		<title>DDD初探 &middot; 这里是qizr的博客</title>
+		<title>DDD初探-通用语言 &middot; 这里是qizr的博客</title>
 		<link rel="shortcut icon" href="http://blog.qizr.tech/images/favicon.ico">
 		<link rel="stylesheet" href="http://blog.qizr.tech/css/style.css">
 		<link rel="stylesheet" href="http://blog.qizr.tech/css/highlight.css">
@@ -41,12 +41,12 @@
             <article class="post">
                 <header>
                     <h1>
-                        DDD初探
+                        DDD初探-通用语言
                     </h1>
                     <h2 class="headline">
                     Jun 17, 2017 21:19
-                    · 141 words
-                    · 1 minute read
+                    · 988 words
+                    · 2 minutes read
                       <span class="tags">
                       
                       
@@ -65,26 +65,61 @@
 <h2 id="1-ddd-doman-driven-design-是什么">1.DDD(DOMAN-DRIVEN DESIGN)是什么?</h2>
 
 <blockquote>
-<p>DDD首先不是关于技术的,而是关于关于讨论,聆听,理解,发现和业务价值的&hellip;</p>
+<p>DDD的核心是消化特定业务领域的知识并创建忠实反应它的软件模型.业务领域是一个公司开展自身业务的方式:组织,流程,实践,员工和语言.</p>
 </blockquote>
 
 <p>狭义的理解,DDD就是业务驱动软件编写,业务是软件设计的一手来源,并且具有持久性,稳定性等.</p>
 
 <h2 id="2-为什么需要ddd">2.为什么需要DDD</h2>
 
+<p><img src="http://op7dcez5u.bkt.clouddn.com/%E9%A2%86%E5%9F%9F%E9%A9%B1%E5%8A%A8%E8%AE%BE%E8%AE%A1.jpg" alt="&lt;&lt;领域驱动设计&gt;&gt;" /></p>
+
+<p>&lt;&lt;领域驱动设计&gt;&gt;这本书的副标题&rdquo;软件核心复杂性应对之道&rdquo;,指出了我们要用DDD的原因,即用DDD是为了解决软件的复杂性的.</p>
+
 <blockquote>
-<p>使领域专家和开发者一起工作,这样开发者开发出来的软件能够准确</p>
+<p>使领域专家和开发者一起工作,这样开发者开发出来的软件能够准确地传达业务规则,此时的软件就像如果领域专家是编码人员时开发出来的一样&hellip;</p>
+
+<p>可以帮助业务人员自我提高.没有任何一个领域专家或者管理者敢说他对业务已经了如指掌,业务知识也需要一个长期的学习过程.在DDD中,每个人都在学习,同时没个人又是知识的贡献者.</p>
 </blockquote>
+
+<p>例如,开发人员是善于逻辑思考的,业务人员在描述业务逻辑的时候,开发人员是有可能够指出业务逻辑的漏洞,并对业务逻辑进行完善,这样对业务人员也是有提高的.</p>
+
+<blockquote>
+<p>DDD同时提供了战略设计和战术设计两种方法.
+DDD关注业务战略&hellip;用于分清楚地分界不同的系统和业务关注点,这样可以保护业务层面的服务&hellip;
+通过使用战术设计建模工具&hellip;这些战术设计工具使开发人员能够按照领域专家的思维模型开发软件</p>
+</blockquote>
+
+<p>DDD计分卡
+<img src="http://op7dcez5u.bkt.clouddn.com/DDD%E8%AE%A1%E5%88%86%E5%8D%A11.png" alt="DDD积分卡1" />
+<img src="http://op7dcez5u.bkt.clouddn.com/DDD%E8%AE%A1%E5%88%86%E5%8D%A12.png" alt="DDD计分卡2" /></p>
+
+<p>从DDD计分卡可以判断出自己的项目是否适合DDD.</p>
 
 <h2 id="3-ddd实施概述">3.DDD实施概述</h2>
 
-<h2 id="4-通用语言">4.通用语言</h2>
+<p>DDD实施分为以下步骤</p>
+
+<p>1)建立通用语言,可以让领域专家和开发人员进行沟通,能够为领域建模供帮助,能够支撑战略建模和战术建模.</p>
+
+<p>2)进行战略建模,明确界限上下文边界,也就是模型的边界,明确界限上下文的映射关系.</p>
+
+<p>3)对界限上下进行架构设计,每个界限上下文可以有自己的架构.</p>
+
+<p>4)进行战术建模,界限上下文建立领域模型.</p>
+
+<h2 id="4-通用语言-ubiquitous-language">4.通用语言(Ubiquitous Language)</h2>
+
+<p>通用语言是团队共享的语言.领域专家和开发者使用的通用语言进行交流.通用语言由领域专家发起,最终也由他们进行验证,可以通过word,excel或者uml图标进行编辑,每个术语都应该得到充分的解释,务求使得领域专家和开发者都能够理解.当然,这份词汇表一定是敏捷的,随着时间的推进改变和进化,反映从领域得到的新见解.</p>
+
+<p>举个书上的例子
+&ldquo;护士给病人注射&rdquo;</p>
 
 <h2 id="5-战略建模">5.战略建模</h2>
 
 <h2 id="6-战术建模">6.战术建模</h2>
 
-<h2 id="7-总结">7.总结</h2>
+<h2 id="7-总结-1">7.总结   1</h2>
 
                 </section>
             </article>
@@ -93,6 +128,23 @@
 
             
 
+            
+
+             
+
+            
+                <div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+<script src="https://img1.cache.netease.com/f2e/tie/yun/sdk/loader.js"></script>
+<script>
+var cloudTieConfig = {
+  url: document.location.href, 
+  sourceId: "",
+  productKey: "daa4d22415044c6798e3863d31b9c448",
+  target: "cloud-tie-wrapper"
+};
+var yunManualLoad = true;
+Tie.loader("aHR0cHM6Ly9hcGkuZ2VudGllLjE2My5jb20vcGMvbGl2ZXNjcmlwdC5odG1s", true);
+</script>
             
 
             <footer id="footer">
