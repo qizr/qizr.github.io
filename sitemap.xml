@@ -2,6 +2,11 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://blog.qizr.tech/pattern/%E5%AD%90%E5%9F%9F%E5%92%8C%E7%95%8C%E9%99%90%E4%B8%8A%E4%B8%8B%E6%96%87/</loc>
+    <lastmod>2017-06-17T21:19:42+08:00</lastmod>
+  </url>
+  
+  <url>
     <loc>http://blog.qizr.tech/pattern/%E6%8F%92%E4%BB%B6%E8%AE%BE%E8%AE%A1%E6%9E%B6%E6%9E%84/</loc>
     <lastmod>2017-04-28T00:59:02+08:00</lastmod>
   </url>
@@ -32,14 +37,26 @@
   </url>
   
   <url>
+    <loc>http://blog.qizr.tech/tags/ddd/</loc>
+    <lastmod>2017-06-17T21:19:42+08:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
     <loc>http://blog.qizr.tech/pattern/</loc>
-    <lastmod>2017-04-28T00:59:02+08:00</lastmod>
+    <lastmod>2017-06-17T21:19:42+08:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://blog.qizr.tech/categories/y/</loc>
+    <lastmod>2017-06-17T21:19:42+08:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>http://blog.qizr.tech/</loc>
-    <lastmod>2017-04-28T00:59:02+08:00</lastmod>
+    <lastmod>2017-06-17T21:19:42+08:00</lastmod>
     <priority>0</priority>
   </url>
   

@@ -6,10 +6,19 @@
     <description>Recent content on 这里是qizr的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Fri, 28 Apr 2017 00:59:02 +0800</lastBuildDate>
+    <lastBuildDate>Sat, 17 Jun 2017 21:19:42 +0800</lastBuildDate>
     
 	<atom:link href="http://blog.qizr.tech/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>关于界限上下文的一些想法</title>
+      <link>http://blog.qizr.tech/pattern/%E5%AD%90%E5%9F%9F%E5%92%8C%E7%95%8C%E9%99%90%E4%B8%8A%E4%B8%8B%E6%96%87/</link>
+      <pubDate>Sat, 17 Jun 2017 21:19:42 +0800</pubDate>
+      
+      <guid>http://blog.qizr.tech/pattern/%E5%AD%90%E5%9F%9F%E5%92%8C%E7%95%8C%E9%99%90%E4%B8%8A%E4%B8%8B%E6%96%87/</guid>
+      <description>界限上下文是&amp;lt;&amp;lt;实现领域驱动设计&amp;gt;&amp;gt;中提到的一个重要概念,花了一些时间才有了进一步的了解,书中提到 界限上下文是一个显</description>
+    </item>
     
     <item>
       <title>深入理解QtCreator的插件设计架构</title>

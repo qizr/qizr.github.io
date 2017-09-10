@@ -1,0 +1,201 @@
+    <!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="author" content="qizr_1986@163.com">
+		<meta name="description" content="一名国企码农的呐喊">
+		<meta name="generator" content="Hugo 0.20.5" />
+		<title>关于界限上下文的一些想法 &middot; 这里是qizr的博客</title>
+		<link rel="shortcut icon" href="http://blog.qizr.tech/images/favicon.ico">
+		<link rel="stylesheet" href="http://blog.qizr.tech/css/style.css">
+		<link rel="stylesheet" href="http://blog.qizr.tech/css/highlight.css">
+		
+
+		
+		<link rel="stylesheet" href="http://blog.qizr.tech/css/font-awesome.min.css">
+		
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='http://blog.qizr.tech/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='http://blog.qizr.tech/pattern'>软件架构</a>
+	<a href='http://blog.qizr.tech/post'>Archive</a>
+	<a href='http://blog.qizr.tech/tags'>Tags</a>
+	<a href='http://blog.qizr.tech/about'>About</a>
+	
+	
+
+	
+</nav>
+
+
+        <section id="wrapper">
+            <article class="post">
+                <header>
+                    <h1>
+                        关于界限上下文的一些想法
+                    </h1>
+                    <h2 class="headline">
+                    Jun 17, 2017 21:19
+                    · 1334 words
+                    · 3 minutes read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="http://blog.qizr.tech/tags/ddd">DDD</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                
+                <section id="post-body">
+                    <p>界限上下文是&lt;&lt;实现领域驱动设计&gt;&gt;中提到的一个重要概念,花了一些时间才有了进一步的了解,书中提到</p>
+
+<blockquote>
+<p>界限上下文是一个显式边界.在边界内,通用语言中的所有术语和词组都有特定的含义,而模型需要准确地反映通用语言.</p>
+</blockquote>
+
+<p>这里提到的&rdquo;显式边界&rdquo;可以理解为一个语境,其实我们说的每一句话都是在特定语境之下,并且特定语境下的每个词都是有唯一解释的,有共同的语境,人与人之间才能正常的交流,就好比和不同专业的人交流,也许他说的每个词都明白,但因为语境不一样,也不能听懂他在说什么.还有上学时做英语阅读理解,虽然每个单词都认识,但依然不能够理解文中表达的含义,就是缺少对语境的了解.书中也也提到了账户的例子,
+<img src="http://op7dcez5u.bkt.clouddn.com/%E8%B4%A6%E6%88%B7%E5%90%AB%E4%B9%89.png" alt="账户的不同含义" />
+在银行上下文和文学上下文中都有账户这个概念,虽然叫法一样,但含义却随着上下文的不同而不同,所以上下文划分的有问题,就会影响人们对问题的描述,有问题的描述自然会转化为有问题的程序,在软件设计之初,对上下文的划分是至关重要的,也是软件战略设计的重要组成.书中也提到了正确划分上下文的必要性,
+<img src="http://op7dcez5u.bkt.clouddn.com/%E5%88%92%E5%88%86%E7%95%8C%E9%99%90%E4%B8%8A%E4%B8%8B%E6%96%87.png" alt="划分界限上下文" /></p>
+
+<p>正确划分软件的界限上下文是重要的,但是如何正确的划分,书中没有明确表述,因为这是与业务密切相关,不过可以确定的是只有在深度理解业务的情况下才能正确划分,当然最好有领域专家能够协助划分.</p>
+
+<p>在进一步对界限上下文进行抽象,可以把界限上下文理解为一个世界,世界里面涵盖自然法则,知识,问题等等一切,可以映射到软件设计中的业务规则,业务知识,需求等,在这个世界里面解决问题的思路的就是代码的设计思路.</p>
+
+<p>举个常用的用例</p>
+
+<p>1）顾客携带商品到收银台;</p>
+
+<p>2）收银员扫描商品条形码;</p>
+
+<p>3）系统根据条形码获取并显示商品信息；</p>
+
+<p>4）收银员重复2~3步，直到所有商品扫描完毕；</p>
+
+<p>5）系统计算商品总额；
+。。。。。。。。。。。。。。。。。。。。
+n）系统打出商品清单，完成交易。</p>
+
+<p>这个例子位于超市界限上下文,该上下文中了包含了超市交易的相关的知识,例如这个世界的参与者顾客,商品,收银员等等;业务流程(用例本身);业务规则等.</p>
+
+<p>我们可依根据这些知识进行进行软件设计,
+<img src="http://op7dcez5u.bkt.clouddn.com/%E5%95%86%E5%93%81%E4%BA%A4%E6%98%93%E4%B8%8A%E4%B8%8B%E6%96%87.png" alt="商品交易界上下文" />
+上图是一个不完整的UML设计,涵盖了商品交易上下文中一些重要的实体,业务流程就是对这些实体行为的编排.</p>
+
+<p>再进一步对商品这个实体进行分析,它有一个重要的行为是根据条形码获取商品信息,简单的实现可能是从数据库获取商品信息,所以在商品也构成一个上下文,在这个上下文包含了与商品交易上下文完全不同的知识,例如数据访问这个概念,ORM相关的概念,也有着自己的业务规则,例如同一个条形码只能对应一种商品等.
+<img src="http://op7dcez5u.bkt.clouddn.com/%E4%B8%8A%E4%B8%8B%E6%96%87.png" alt="上下文概念" />
+如上图所示,每个上下文都代表着一个世界,都有着符合本世界体系的知识和概念,商品交易上下文包含了商品,交易等概念,商品上下文包含了数据访问,商品信息等概念,数据访问上下文中包含了数据库链接,访问,连接池等概念.即使有些概念的叫法看起来一致,例如商品交易上下文中和商品上下文中的商品信息概念,前者的信息是用于呈献给用户的,而后者是数据库中商品信息表中的一个映射,两者的本质是有区别的,而且都必须在各自的上下文中才能有明确的解释.</p>
+
+<p><img src="http://op7dcez5u.bkt.clouddn.com/%E4%B8%8A%E4%B8%8B%E6%96%87%E4%B8%96%E7%95%8C1.png" alt="上下文世界" />
+如上图所示,软件是可以由不同的上下文嵌套而成,如同我们的世界是由不同的世界嵌套构成,所以世界即上下文,上下文即世界,应了佛经上的那句&rdquo;须弥藏芥子，芥子纳须弥&rdquo;,一切皆世界,世界皆一切.</p>
+
+                </section>
+            </article>
+
+            
+
+            
+
+            
+
+             
+
+            
+                <div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+<script src="https://img1.cache.netease.com/f2e/tie/yun/sdk/loader.js"></script>
+<script>
+var cloudTieConfig = {
+  url: document.location.href, 
+  sourceId: "",
+  productKey: "daa4d22415044c6798e3863d31b9c448",
+  target: "cloud-tie-wrapper"
+};
+var yunManualLoad = true;
+Tie.loader("aHR0cHM6Ly9hcGkuZ2VudGllLjE2My5jb20vcGMvbGl2ZXNjcmlwdC5odG1s", true);
+</script>
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+
+	
+	
+    <a class="symbol" href="your_facebook_link">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="your_github_link">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="your_twitter_link">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2017 <i class="fa fa-heart" aria-hidden="true"></i> qizr_1986@163.com
+    
+    </p>
+    <p class="small">
+        Powered by <a href="http://www.gohugo.io/">Hugo</a> Theme By <a href="https://github.com/nodejh/hugo-theme-cactus-plus">nodejh</a>
+    </p>
+</footer>
+
+        </section>
+
+        <script src="http://blog.qizr.tech/js/jquery-2.2.4.min.js"></script>
+<script src="http://blog.qizr.tech/js/main.js"></script>
+<script src="http://blog.qizr.tech/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'your_google_analytics_code', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+
+<script>
+var baiduAnalytics = 'your_baidu_tongji_code';
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?" + baiduAnalytics;
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+
+    </body>
+</html>
