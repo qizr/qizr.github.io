@@ -6,10 +6,19 @@
     <description>Recent content in Y on 这里是qizr的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Sat, 17 Jun 2017 21:19:42 +0800</lastBuildDate>
+    <lastBuildDate>Sat, 30 Sep 2017 20:33:33 +0800</lastBuildDate>
     
 	<atom:link href="http://blog.qizr.tech/categories/y/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>timescale简介</title>
+      <link>http://blog.qizr.tech/post/timescale%E7%AE%80%E4%BB%8B/</link>
+      <pubDate>Sat, 30 Sep 2017 20:33:33 +0800</pubDate>
+      
+      <guid>http://blog.qizr.tech/post/timescale%E7%AE%80%E4%BB%8B/</guid>
+      <description>最近看到这个开源时序数据库,基于postgrSQL,github已经2600多颗星,适合传感器采集数据的存储以及分析,项目上应该能用得到,</description>
+    </item>
     
     <item>
       <title>关于界限上下文的一些想法</title>

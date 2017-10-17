@@ -1,0 +1,716 @@
+    <!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="author" content="qizr_1986@163.com">
+		<meta name="description" content="一名国企码农的呐喊">
+		<meta name="generator" content="Hugo 0.20.5" />
+		<title>timescale简介 &middot; 这里是qizr的博客</title>
+		<link rel="shortcut icon" href="http://blog.qizr.tech/images/favicon.ico">
+		<link rel="stylesheet" href="http://blog.qizr.tech/css/style.css">
+		<link rel="stylesheet" href="http://blog.qizr.tech/css/highlight.css">
+		
+
+		
+		<link rel="stylesheet" href="http://blog.qizr.tech/css/font-awesome.min.css">
+		
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='http://blog.qizr.tech/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='http://blog.qizr.tech/pattern'>软件架构</a>
+	<a href='http://blog.qizr.tech/post'>Archive</a>
+	<a href='http://blog.qizr.tech/tags'>Tags</a>
+	<a href='http://blog.qizr.tech/about'>About</a>
+	
+	
+
+	
+</nav>
+
+
+        <section id="wrapper">
+            <article class="post">
+                <header>
+                    <h1>
+                        timescale简介
+                    </h1>
+                    <h2 class="headline">
+                    Sep 30, 2017 20:33
+                    · 7911 words
+                    · 16 minutes read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="http://blog.qizr.tech/tags/x">x</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                
+                <section id="post-body">
+                    
+
+<p>最近看到这个开源时序数据库,基于postgrSQL,github已经2600多颗星,适合传感器采集数据的存储以及分析,项目上应该能用得到,以下是官网的介绍,翻译一下.
+<a href="http://www.timescale.com/">官网地址</a></p>
+
+<hr />
+
+<h2 id="概述">概述</h2>
+
+<p>TimescaleDB是一款针对快速获取和复杂查询而优化的开源时间序列数据库。 它使用“标准的SQL”语句，并且像传统的关系数据库那样容易使用，像nosql那样可扩展.
+与这两种替代品（关系数据库与NoSQL）相比,TimescaleDB为时间序列数据集合了两种数据库的优点：</p>
+
+<h3 id="易用">易用</h3>
+
+<ul>
+<li>PostgreSQL原生支持的所有SQL,包含完整SQL接口（包括辅助索引，非时间聚合，子查询，JOIN，窗口函数）</li>
+<li>任何使用PostgreSQL的客户端或工具，可以直接应用到该数据库，不需要更改。</li>
+<li>时间为导向的特性，API功能和相应的优化。</li>
+<li>可靠的数据存储。</li>
+</ul>
+
+<h3 id="可扩展">可扩展</h3>
+
+<ul>
+<li>透明时间/空间分区，用于放大（单个节点）和扩展（即将出现）</li>
+<li>高数据写入速率（包括批量提交，内存中索引，事务支持，数据备份支持)</li>
+<li>单个节点上的大小合适的块（二维数据分区），以确保即使在大数据量时即可快速读取。</li>
+<li>块之间和服务器之间的并行操作</li>
+</ul>
+
+<h3 id="可靠性">可靠性</h3>
+
+<ul>
+<li>作为PostgreSQL的扩展。</li>
+<li>受益于20多年的PostgreSQL研究的成功经验（包括流式复制，备份）</li>
+<li>灵活的管理选项（与现有的PostgreSQL生态系统和工具兼容）</li>
+</ul>
+
+<p>本节的其余部分描述了TimescaleDB架构的设计和动机,包括为什么时间序列数据不同，以及在构建TimescaleDB时如何利用其特性.</p>
+
+<h2 id="什么是时序数据">什么是时序数据</h2>
+
+<p>时序数据和其他数据有什么不同?</p>
+
+<p>许多应用程序或数据库实际上采取了一种窄视图,并将时间序列数据与特定形式的服务器数据等同：</p>
+
+<pre><code>Name:    CPU
+Tags:    Host=MyServer, Region=West
+Data:
+2017-01-01 01:02:00    70
+2017-01-01 01:03:00    71
+2017-01-01 01:04:00    72
+2017-01-01 01:05:01    68
+</code></pre>
+
+<p>但事实上,在许多监控应用中，不同的数据通常被会被一起收集（例如，CPU，存储器，网络统计，电池寿命）。 并且，分别考虑每个指标并不总是有意义的。 所以可以考虑这种的“更宽”的数据模型，保持同时收集的指标之间的关联性。</p>
+
+<pre><code>Metrics: CPU, free_mem, net_rssi, battery
+Tags:    Host=MyServer, Region=West
+Data:
+2017-01-01 01:02:00    70    500    -40    80
+2017-01-01 01:03:00    71    400    -42    80
+2017-01-01 01:04:00    72    367    -41    80
+2017-01-01 01:05:01    68    750    -54    79
+</code></pre>
+
+<p>这种类型的数据应该应用更为广泛，无论是传感器的温度读数，股票的价格，机器的状态，甚至登录到应用程序的数量。</p>
+
+<p>时间序列数据代表系统，过程或行为随时间变化的数据。</p>
+
+<h3 id="时序数据的特点">时序数据的特点</h3>
+
+<p>如果仔细观察它是如何生产和获取的，那么TimescaleDB等时间序列数据库通常具有以下特点： </p>
+
+<ul>
+<li>时间中心:数据记录总有时间戳</li>
+<li>只增加:数据只增不减</li>
+<li>最新数据:新数据通常是最最新时间，我们更少地更新或补充关于历史时间的缺失数据。</li>
+</ul>
+
+<p>数据的频率或规律性不太重要， 它可以每毫秒或一小时收集。 它也可以以规则或不规则的间隔收集（例如，当某些事件发生时，而不是在预定义的时间）。</p>
+
+<p>But haven&rsquo;t databases long had time fields? 与其他数据（如标准关系“业务”）数据相比，时间序列数据（和支持它们的数据库）的关键区别在于数据的更改是插入，而不是覆盖。</p>
+
+<h3 id="时序数据无处不在">时序数据无处不在</h3>
+
+<p>时间序列数据随处可见，例如。
+* 监控计算机系统​：虚拟机，服务器，容器的度量（CPU，内存，网络和磁盘IOPS），服务和应用指标（请求率，请求延迟）。
+* 金融交易系统：经典证券，较新的加密货币，付款，交易事件。
+* 物联网：工业机器和设备上的传感器数据，可穿戴设备，车辆，物理容器，托盘，智能家居消费者设备等。
+* 事件应用程序：用户/客户交互数据，如点击流，浏览量，登录，注册等。
+* 商业智能：跟踪关键指标和业务的整体健康状况。
+* 环境监测：温度，湿度，压力，pH，花粉计数，气流，一氧化碳（CO），二氧化氮（NO2），颗粒物（PM10）。</p>
+
+<h2 id="数据模型">数据模型</h2>
+
+<p>TimescaleDB利用“宽表”数据模型，这在关系数据库的世界中是相当普遍的。 这使得Timescale与其他通常使用“窄表”模型的其他时间序列数据库(例如实时数据库)有些不同。</p>
+
+<p>在这里，我们将讨论为什么选择宽表模型，以及我们如何推荐使用物联网（IoT）的时间序列数据。</p>
+
+<p>设想一下，分布的1000个物联网设备以不同的频率收采集环境数据。 此数据可能包括：</p>
+
+<ul>
+<li>标识符：device_id，时间戳</li>
+<li>元数据：location_id，dev_type，firmware_version，customer_id</li>
+<li>设备指标：cpu_1m_avg，free_mem，used_mem，net_rssi，net_loss，电池</li>
+<li>传感器指标：温度，湿度，压力，CO，NO2，PM10</li>
+</ul>
+
+<p>采集来的数据类似下面的格式:</p>
+
+<table>
+<thead>
+<tr>
+<th>timestamp</th>
+<th>device_id</th>
+<th>cpu_1m_avg</th>
+<th>free_mem</th>
+<th>temperature</th>
+<th>location_id</th>
+<th>dev_type</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>2017-01-01 01:02:00</td>
+<td>abc123</td>
+<td>80</td>
+<td>500MB</td>
+<td>72</td>
+<td>335</td>
+<td>field</td>
+</tr>
+
+<tr>
+<td>2017-01-01 01:02:23</td>
+<td>def456</td>
+<td>90</td>
+<td>400MB</td>
+<td>64</td>
+<td>335</td>
+<td>roof</td>
+</tr>
+
+<tr>
+<td>2017-01-01 01:02:30</td>
+<td>ghi789</td>
+<td>120</td>
+<td>0MB</td>
+<td>56</td>
+<td>77</td>
+<td>roof</td>
+</tr>
+
+<tr>
+<td>2017-01-01 01:03:12</td>
+<td>abc123</td>
+<td>80</td>
+<td>500MB</td>
+<td>72</td>
+<td>335</td>
+<td>field</td>
+</tr>
+
+<tr>
+<td>2017-01-01 01:03:35</td>
+<td>def456</td>
+<td>95</td>
+<td>350MB</td>
+<td>64</td>
+<td>335</td>
+<td>roof</td>
+</tr>
+
+<tr>
+<td>2017-01-01 01:03:42</td>
+<td>ghi789</td>
+<td>100</td>
+<td>100MB</td>
+<td>56</td>
+<td>77</td>
+<td>roof</td>
+</tr>
+</tbody>
+</table>
+
+<p>让我们为这些数据建立模型.</p>
+
+<h3 id="窄表模型">窄表模型</h3>
+
+<p>多数时序数据利用以下方式为数据建模.</p>
+
+<p>窄表模型
+大多数时间序列数据库将以以下方式表示此数据：</p>
+
+<ul>
+<li>代表每个属性作为一个单独一列数据（例如，cpu_1m_avg和free_mem作为两个不同的东西）</li>
+<li>以“时间”，“值”对的方式进行存储</li>
+<li>将元数据值表示为与该tag/value集合相关联的“标签集”</li>
+</ul>
+
+<p>在该模型中，每个值/标签组合作为单独一个“时间序列”。</p>
+
+<p>使用我们上面的例子，这种方法将产生9个不同的“时间序列”，每个时间序列由一组唯一的标签定义。</p>
+
+<pre><code>1. {name:  cpu_1m_avg,  device_id: abc123,  location_id: 335,  dev_type: field}
+2. {name:  cpu_1m_avg,  device_id: def456,  location_id: 335,  dev_type: roof}
+3. {name:  cpu_1m_avg,  device_id: ghi789,  location_id:  77,  dev_type: roof}
+4. {name:    free_mem,  device_id: abc123,  location_id: 335,  dev_type: field}
+5. {name:    free_mem,  device_id: def456,  location_id: 335,  dev_type: roof}
+6. {name:    free_mem,  device_id: ghi789,  location_id:  77,  dev_type: roof}
+7. {name: temperature,  device_id: abc123,  location_id: 335,  dev_type: field}
+8. {name: temperature,  device_id: def456,  location_id: 335,  dev_type: roof}
+9. {name: temperature,  device_id: ghi789,  location_id:  77,  dev_type: roof}
+</code></pre>
+
+<p>这种时间序列的数量等于每个属性种类的乘积，即（＃名称）x（＃设备ID）x（＃位置ids）x（设备类型））。</p>
+
+<p>这些“时间序列”中的每一个都有自己的一组时间/值序列。</p>
+
+<p>现在，如果您采集的设备状态属性都是相对独立的，不属于某种元数据结构,这种方法可能是有意义的。</p>
+
+<p>但总的来说，我们认为这种情况是不多见的。它丢失了数据之间的关联性，例如你可能遇到以下问题：</p>
+
+<ul>
+<li>当free_mem为0时系统的state是什么?</li>
+<li>cpu_1m_avg与ree_mem的变化是否有关系？</li>
+<li>ocation_id的平均温度是多少？</li>
+</ul>
+
+<p>我们认为窄模型不是很好。我们是真的收集了9种不同的数据呢，还是仅收集了一一种由多种指标组合而成的数据？</p>
+
+<h3 id="宽表模型">宽表模型</h3>
+
+<p>相比之下，TimescaleDB使用了广泛的模型，反映了数据的本质结构。</p>
+
+<p>我们的宽桌面模型实际上看起来与初始数据流完全相同：</p>
+
+<table>
+<thead>
+<tr>
+<th>时间戳</th>
+<th>设备ID</th>
+<th>cpu_1m_avg</th>
+<th>FREE_MEM</th>
+<th>温度</th>
+<th>LOCATION_ID</th>
+<th>dev_type</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>2017-01-01 01:02:00</td>
+<td>ABC123</td>
+<td>80</td>
+<td>500MB</td>
+<td>72</td>
+<td>42</td>
+<td>field</td>
+</tr>
+
+<tr>
+<td>2017-01-01 01:02:23</td>
+<td>def456</td>
+<td>90</td>
+<td>400MB</td>
+<td>64</td>
+<td>42</td>
+<td>roof</td>
+</tr>
+
+<tr>
+<td>2017-01-01 01:02:30</td>
+<td>ghi789</td>
+<td>120</td>
+<td>0MB</td>
+<td>56</td>
+<td>77</td>
+<td>roof</td>
+</tr>
+
+<tr>
+<td>2017-01-01 01:03:12</td>
+<td>ABC123</td>
+<td>80</td>
+<td>500MB</td>
+<td>72</td>
+<td>42</td>
+<td>field</td>
+</tr>
+
+<tr>
+<td>2017-01-01 01:03:35</td>
+<td>def456</td>
+<td>95</td>
+<td>350MB</td>
+<td>64</td>
+<td>42</td>
+<td>roof</td>
+</tr>
+
+<tr>
+<td>2017-01-01 01:03:42</td>
+<td>ghi789</td>
+<td>100</td>
+<td>100MB</td>
+<td>56</td>
+<td>77</td>
+<td>roof</td>
+</tr>
+</tbody>
+</table>
+
+<p>这里，每一行都是一个新的读数,指定时间的一组元数据。这使我们能够保留数据中的关系，并提出比以前更有趣或更具探索性的问题。</p>
+
+<p>当然，这不是一种新的格式：它是通常在关系数据库中找到的。这也是为什么我们发现这种格式更直观。</p>
+
+<h3 id="joins的使用">JOINS的使用</h3>
+
+<p>TimescaleDB的数据模型与关系数据库有着相似之处：它支持JOINs。具体来说，可以在辅助表中存储额外的元数据，然后在查询时使用该数据。</p>
+
+<p>在我们的例子，我们可以有一个单独的位置表，映射location_id到该位置的其他元数据。例如：</p>
+
+<table>
+<thead>
+<tr>
+<th>location_id</th>
+<th>名称</th>
+<th>纬度</th>
+<th>经度</th>
+<th>邮政编码</th>
+<th>地区</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>42</td>
+<td>大中央车站</td>
+<td>40.7527°N</td>
+<td>73.9772°W</td>
+<td>10017</td>
+<td>NYC</td>
+</tr>
+
+<tr>
+<td>77</td>
+<td>大厅7</td>
+<td>42.3593°N</td>
+<td>71.0935°W</td>
+<td>02139</td>
+<td>马萨诸塞</td>
+</tr>
+</tbody>
+</table>
+
+<p>然后，可以join两个表一起查询，例如：zipcode为10017位置上设备平均free_mem是多少.</p>
+
+<p>没有join，就需要对它们的数据进行非规范化，并将每个测量行存储所有元数据。这会造成数据膨胀，使数据管理更加困难。</p>
+
+<p>通过连接，可以独立存储元数据，轻松地更新映射。</p>
+
+<p>举例来说，如果我们要更新我们location_id为77的region（例如，从“马萨诸塞州”向“波士顿”），我们就不需要重新修改历史数据.</p>
+
+<h2 id="架构与概念">架构与概念</h2>
+
+<p>TimescaleDB是作为PostgreSQL上的一个扩展，它可以深入到Postgres的查询计划器，数据模型和执行引擎中。这允许TimescaleDB的展示就像一个普通表，但实际上只是包含实际数据的许多单独表的抽象或虚拟视图。</p>
+
+<p>这种单表视图，我们称做超表(hypertable)，由许多的块(chunks)构成。块是通过在一个或两个维度上划分超级表的数据创建的：通过时间或“partition key”（如设备ID，位置，用户ID等）创建。我们认为它是跨“time and space”的分区。</p>
+
+<h3 id="术语">术语</h3>
+
+<h4 id="hypertables-超级表">Hypertables(超级表)</h4>
+
+<p>数据交互的重点是超表(Hypertables)，跨越空间和时间间隔的单个连续表的抽象，使得可以通过普通的SQL查询它。</p>
+
+<p>几乎所有与TimescaleDB的用户交互都是与超级表。创建表和索引，更改表，插入数据，选择数据等可以（并且应该）全部在hypertable上执行。</p>
+
+<p>超级表由具有列名称和类型的标准模式定义，至少有一列指定时间值，另一列用于分区键(partitioning key)。</p>
+
+<p>单个TimescaleDB部署可以存储多个超级表，每个具有不同的结构。</p>
+
+<p>在创建一个TimescaleDB需要Hypertable的两个简单的SQL命令:CREATE TABLE，其次是SELECT create_hypertable().</p>
+
+<p>超级表会自动创建时间和主键(primal key)的索引,也可以创建其他类型的索引.</p>
+
+<h4 id="chunks-块">Chunks(块)</h4>
+
+<p>在内部，TimescaleDB自动将Hypertable分割成块，每个块对应于一个特定的时间间隔和一个分区键。这些分区是不重合的，这有助于查询器进行查询.</p>
+
+<p>每个块都使用标准数据库表实现。（在PostgreSQL内部组件中，该块实际上是“父”超级表的“子表”。）</p>
+
+<p>合适的块大小，确保表索引的所有B树可以在插入期间驻留在内存中。这样可以避免在修改这些树中的任意位置时出现thrashing。</p>
+
+<p>此外，通过避免过大的块，我们可以根据自动保留策略删除的数据时避免昂贵的“抽真空”操作。运行时可以通过简单地删除块（内部表）来执行此类操作，而不是删除单个行。</p>
+
+<h4 id="单节点与集群">单节点与集群</h4>
+
+<p>TimescaleDB可以单节点和集群执行分区操作。虽然传统上分区仅用于跨多台机器的扩展，但是即使在单台机器上，也可以进行扩展提高写入速率（并且改进的并行化查询）。</p>
+
+<p>TimescaleDB目前的开源版本仅支持单节点部署。但是，TimescaleDB的单节点版本已经在商品机器上超过100亿行高压测试，而插入性能没有损失。</p>
+
+<h4 id="单节点分区的优点">单节点分区的优点</h4>
+
+<p>在单个计算机上扩展数据库性能的常见问题是内存和磁盘之间的成本/性能折衷。最终，我们的内存放不下我们所有的数据，需要将数据和索引写入磁盘。</p>
+
+<p>一旦数据足够大，我们无法将所有索引的页面（例如，B-tree）都放在内存中，那么更新树的随机部分需要和磁盘进行交换。而PostgreSQL等数据库为每个表索引保留一个B树，以便有效地找到该索引中的值。因此，您在索引更多列时会出现问题。</p>
+
+<p>但是由于TimescaleDB创建的每个块本身都作为单独的数据库表存储，所以它们的所有索引只能构建在这些小得多的表之间，而不是单个表，表示整个数据集。因此，如果我们正确地调整这些块，我们可以将最新的表（及其B树）完全配置在内存中，并避免这种交换磁盘问题，同时保持对多个索引的支持。</p>
+
+<h2 id="和postgresql比较">和PostgreSQL比较</h2>
+
+<p>TimescaleDB具有三种主要优点，适用于存储时间序列数据相对PostgreSQL或其他传统RDBMS来说:较高数据采集率，优越的查询性能和时间特性的功能。</p>
+
+<p>而由于TimescaleDB允许您使用全范围的PostgreSQL的功能和工具-例如JOINS语句，通过PostGIS的地理信息查询，pg_dump和pg_resotre语句，使用的postgrepsql的连接器,没理由不使用用在PostgreSQL数据库中存储时间序列数据的TimescaleDB。</p>
+
+<h3 id="高采集率">高采集率</h3>
+
+<p>与PostgreSQL相比，TimescaleDB的采集时序数据速度要高得多，更稳定。正如我们所描述的架构的讨论，PostgreSQL的性能开始凸显,当索引过大而不适合在内存中时.</p>
+
+<p>特别地，每当插入新行时，数据库需要更新每个表的列索引（例如，B树），这将涉及磁盘的页交换。利用更大的内存来只能延缓上述情况的发生，每秒10K-100K +行的吞吐量可能会下降到每秒数百行。</p>
+
+<p>在单机情况下,TimescaleDB通过对时空分区的充分利用来解决上述问题。而且对新数据写入的表都集中在的保留在内存中的表，因此更新任何辅助索引也是快速的。</p>
+
+<p>下图显示了这种方法的明显优势。下图中数据达到10亿行（在单台计算机上）,模拟了一个常见的监视情况，数据库客户端插入包含时间的中等大小的一批数据，包含设备的标签集和多个属性（10个）。该实验是在具有网络连接SSD存储的标准Azure VM（DS4 v2，8内核）上执行的。</p>
+
+<p><img src="http://assets.timescale.com/benchmarks/timescale-vs-postgres-insert-1B.jpg" alt="PostSql vs timescale" /></p>
+
+<p>我们观察到，PostgreSQL和TimescaleDB在行数20M时,吞吐量基本一致（分别为106K和114K）开始，每秒超过1M个属性。然而，当数据打到50M行，PostgreSQL的性能开始急剧下降。在最后100M行的平均值只有5K行/秒，而TimescaleDB保留其111K行/秒的吞吐量。</p>
+
+<p>总之，加载10亿行数据耗费的时间,timescale基本是postsql的1/15,在大数据的情况下,timescale的吞吐量是postsql的20倍.</p>
+
+<p>上图显示了,即使使用单磁盘，它也能保持其超过10B行的持续性能。</p>
+
+<p>此外，有用户表示在千亿级别的数据量上,依然能保持上述稳定性.</p>
+
+<h3 id="超凡的查询性能">超凡的查询性能</h3>
+
+<p>在单磁盘机上，PostgreSQL和TimescaleDB的简单查询执行索引查找或表扫描的效率相似。</p>
+
+<p>例如，在具有时间索引，主机名和cpu使用情况信息的100M行表上，以下查询对于每个数据库将需要少于5ms：</p>
+
+<pre><code>SELECT date_trunc('minute', time) AS minute, max(user_usage) FROM cpu WHERE hostname = 'host_1234' AND time &gt;= '2017-01-01 00:00' AND time &lt; '2017-01-01 01:00' GROUP BY minute ORDER BY minute;
+</code></pre>
+
+<p>涉及对索引进行基本扫描的类似查询性能基本一样：</p>
+
+<pre><code>SELECT * FROM cpu
+  WHERE usage_user &gt; 90.0
+    AND time &gt;= '2017-01-01' AND time &lt; '2017-01-02';
+</code></pre>
+
+<p>涉及时间的GROUP BY查询(在时间导向的分析中很常见) ,会在TimescaleDB中表现出卓越的性能。</p>
+
+<p>例如，下面的查询语句涉及33M行数据,当整个表为100M行时,timescale能够快5倍,当为1billion行时,快2倍。</p>
+
+<pre><code>SELECT date_trunc('hour', time) as hour,
+    hostname, avg(usage_user)
+  FROM cpu
+  WHERE time &gt;= '2017-01-01' AND time &lt; '2017-01-02'
+  GROUP BY hour, hostname
+  ORDER BY hour;
+</code></pre>
+
+<p>此外，在timescale中,一些特别是时间排序的查询会表现的更好.</p>
+
+<p>例如，TimescaleDB引入了一个基于时间的“合并添加”优化，以最大限度地减少执行以下操作数量（时间已经被排序）。对于我们的100M行的表，timescale比postgresql快296倍（82MS与32566ms）。</p>
+
+<pre><code>SELECT date_trunc('minute', time) AS minute, max(usage_user)
+  FROM cpu
+  WHERE time &lt; '2017-01-01'
+  GROUP BY minute
+  ORDER BY minute DESC
+  LIMIT 5;
+</code></pre>
+
+<p>我们将尽快发布PostgreSQL和TimescaleDB之间更完整的基准比较，以及能够重复我们的基准测试的软件。</p>
+
+<p>从我们的查询基准高层结果是，我们试图尝试了所有的查询,TimescaleDB达到或者相似或更好（或大大优于）的性能,相比PostgreSQL的。</p>
+
+<p>与PostgreSQL相比，TimescaleDB的代价是稍微复杂的前期规划（因为单个hypertable可以由许多块组成）。这可以转换为几毫秒的计划时间，这对于非常低延迟的查询（&lt;10ms）可能会造成不成比例的影响。</p>
+
+<h3 id="面向时间的功能">面向时间的功能</h3>
+
+<p>TimescaleDB还包括一些在传统关系数据库中没有的面向时间的功能。这些包括特殊查询优化（如上面的合并增加），为面向时间的查询提供了一些巨大的性能改进，以及其他面向时间的功能（其中一些列在下面）。</p>
+
+<h4 id="面向时间的分析">面向时间的分析</h4>
+
+<p>TimescaleDB包括新的面向时间的分析，包括以下一些功能：
+* Time bucketing​:强大的data_func 函数,它允许任意的时间间隔（例如，5分钟，6小时等），以及灵活的分组和偏移，而不是仅仅秒，分，小时等.
+* ​Last​ and ​first​ aggregates: ：这些功能让你得到一个基于其他列排序的数据。例如，last(temperature, time)将一组（例如，一小时）内返回基于时间最新的温度值。</p>
+
+<p>这些类型的功能非常适合的面向时间查询。以下财务查询，例如打印每个资产的开仓，收盘，高价和低价。</p>
+
+<pre><code>SELECT time_bucket('3 hours', time) AS period
+    asset_code,
+    first(price, time) AS opening, last(price, time) AS closing,
+    max(price) AS high, min(price) AS low
+  FROM prices
+  WHERE time &gt; NOW() - interval '7 days'
+  GROUP BY period, asset_code
+  ORDER BY period DESC, asset_code;
+</code></pre>
+
+<p>last函数，通过第二列进行排序,完成一些强大的类型的查询。例如，在财务报告中常见的一种技术是“双模式”，分别有观察的时间，观察记录相关的时间。在这样的模型，更正插入一个新行（具有更近time_recorded场），不替换现有的数据。</p>
+
+<p>以下查询返回每个资产的每日价格，按最新记录价格排序。</p>
+
+<pre><code>SELECT time_bucket('1 day', time) AS day,
+    asset_code,
+    last(price, time_recorded)
+  FROM prices
+  WHERE time &gt; '2017-01-01'
+  GROUP BY day, asset_code
+  ORDER BY day DESC, asset_code;
+</code></pre>
+
+<h4 id="面向时间的数据管理">面向时间的数据管理</h4>
+
+<p>TimescaleDB还提供了一些在PostgreSQL中不具备的数据管理功能。例如，当处理时间序列数据时，数据通常很快地建立起来。所以，你可能要写一个数据持久策略“只存一周的数据”.</p>
+
+<p>事实上，这与持续聚合相结合是很常见的，因此您可以保留两个超级表：一个具有原始数据，另一个具有已经被累积成小时或小时聚合的数据。然后，您可能需要在两个（超）表上定义不同的保留策略，从而保存聚合数据的时间更长。</p>
+
+<p>TimescaleDB允许旧数据的在块级别的删除，而不是在该行级别，通过它的drop_chunks()功能。</p>
+
+<pre><code>SELECT drop_chunks(interval '7 days', 'conditions');
+</code></pre>
+
+<p>这将从超级表“条件”中删除所有块（文件），只能包含比此持续时间更早的数据，而不是删除块中的任何单独数据行。这样可以避免底层数据库文件的碎片化，反过来又避免了在非常大的表格中可能会非常昂贵的抽真空的需要。</p>
+
+<h2 id="和nosql进行比较">和nosql进行比较</h2>
+
+<p>与一般的NoSQL数据库（例如MongoDB，Cassandra）或更专门的面向时间（例如InfluxDB，KairosDB）相比，TimescaleDB提供了定性和定量的区别：</p>
+
+<ul>
+<li>普通SQL：TimescaleDB为您提供了标准的SQL查询时间序列数据。大多数（全部）NoSQL数据库需要学习新的查询语言或使用最多的“SQL-ish”（这仍然打破了与现有工具的兼容性）。</li>
+<li>操作简洁性：随着TimescaleDB，您只需要管理一个数据库，你的关系和时间序列数据。否则，用户经常需要将数据分为两个数据库：“正常”关系数据库和第二个时间序列数据库。</li>
+<li>JOIN的可以在关系数据和时间序列数据进行。</li>
+<li>查询性能是多样化组查询的速度更快。NoSQL数据库上更复杂的查询通常很慢或全表扫描，而一些数据库甚至不能支持许多自然查询。</li>
+<li>管理如PostgreSQL和继承其用于多种多样的数据类型和索引（B树，哈希，范围，布林，依据，GIN）的支持。</li>
+<li>地理空间数据的原生支持：存储在TimescaleDB可以利用的PostGIS的几何数据类型，索引和查询数据。</li>
+<li>第三方工具：TimescaleDB支持任何讲SQL，包括像的Tableau BI工具。</li>
+</ul>
+
+<h3 id="当不使用timescaledb">当不使用TimescaleDB？</h3>
+
+<p>那么再一次，如果下列任何一个是真的，你可能不适合用TimescaleDB：</p>
+
+<ul>
+<li>简单的读需求：如果你只是想快速键值查找或单列汇总，内存或面向列数据库可能更合适。前者显然不会扩展到相同的数据量，然而，后者的性能显着低于更复杂的查询。</li>
+<li>非常稀疏的或非结构化数据：虽然TimescaleDB利用的PostgreSQL支持JSON / JSONB格式和相当有效地处理稀疏性（位图NULL值），无模式的体系结构在某些情况下更合适。</li>
+<li>要求较高的数据压缩率：测试表明timescale在ZFS上有4倍左右的压缩率，经过压缩优化的列存储数据库可能更适合于较高的压缩率。</li>
+<li>偶发或离线分析：如果缓慢的响应时间是可以接受的（仅限于少数预先计算的指标或快速的响应时间），并且没有数据的高并发访问，可避免使用数据库，而只是将数据存储在分布式文件系统中。</li>
+</ul>
+
+                </section>
+            </article>
+
+            
+
+            
+
+            
+
+             
+
+            
+                <div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+<script src="https://img1.cache.netease.com/f2e/tie/yun/sdk/loader.js"></script>
+<script>
+var cloudTieConfig = {
+  url: document.location.href, 
+  sourceId: "",
+  productKey: "daa4d22415044c6798e3863d31b9c448",
+  target: "cloud-tie-wrapper"
+};
+var yunManualLoad = true;
+Tie.loader("aHR0cHM6Ly9hcGkuZ2VudGllLjE2My5jb20vcGMvbGl2ZXNjcmlwdC5odG1s", true);
+</script>
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+
+	
+	
+    <a class="symbol" href="your_facebook_link">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="your_github_link">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="your_twitter_link">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2017 <i class="fa fa-heart" aria-hidden="true"></i> qizr_1986@163.com
+    
+    </p>
+    <p class="small">
+        Powered by <a href="http://www.gohugo.io/">Hugo</a> Theme By <a href="https://github.com/nodejh/hugo-theme-cactus-plus">nodejh</a>
+    </p>
+</footer>
+
+        </section>
+
+        <script src="http://blog.qizr.tech/js/jquery-2.2.4.min.js"></script>
+<script src="http://blog.qizr.tech/js/main.js"></script>
+<script src="http://blog.qizr.tech/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'your_google_analytics_code', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+
+<script>
+var baiduAnalytics = 'your_baidu_tongji_code';
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?" + baiduAnalytics;
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+
+    </body>
+</html>
